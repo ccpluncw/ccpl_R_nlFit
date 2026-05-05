@@ -16,11 +16,8 @@ validateNumberlineParameters <- function(parList) {
 		out <- FALSE
 	} else {
 		if(is.null(parList[["lowerBound"]])) {
-			if(parList[["upperBound"]] <= 0) out <- FALSE
-		} else {
 			if(parList[["upperBound"]] < parList[["lowerBound"]]) out <- FALSE
 		}
-
 	}
 
 	if(!is.null(parList[["memoryLength"]])) {
@@ -36,6 +33,10 @@ validateNumberlineParameters <- function(parList) {
 
 	if(!is.null(parList[["numberSensitivity"]])) {
 		if(parList[["numberSensitivity"]] < 0 | parList[["numberSensitivity"]] > 1) out <- FALSE
+	}
+
+	if(!is.null(parList[["firstEstimate"]])) {
+		if(parList[["firstEstimate"]] < 0 | parList[["firstEstimate"]] > 1) out <- FALSE
 	}
 
 	if(!is.null(parList[["pIncludeConceptualPoints"]])) {

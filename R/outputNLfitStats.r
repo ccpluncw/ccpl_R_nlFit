@@ -25,11 +25,12 @@ outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstim
 		df.fitted <- ordinalNumberLineFlex (data[[dataTargetCol]], statList, loops=loops)
 	}
 
-	fit.r2 <- round(chutils::ch.R2(data[[dataEstimateCol]], df.fitted[["fEst"]]),2)
-	fit.BIC <- round(chutils::ch.IC(data[[dataEstimateCol]], df.fitted[["fEst"]], pars.n, ICtype = "BIC"), 0)
-	fit.AIC <- round(chutils::ch.IC(data[[dataEstimateCol]], df.fitted[["fEst"]], pars.n, ICtype = "AIC"), 0)
-
 	df.fitted <- merge(df.fitted, data,  by.x = "target", by.y = dataTargetCol)
+
+	fit.r2 <- round(chutils::ch.R2(df.fitted[[dataEstimateCol]], df.fitted[["fEst"]]),2)
+	fit.BIC <- round(chutils::ch.IC(df.fitted[[dataEstimateCol]], df.fitted[["fEst"]], pars.n, ICtype = "BIC"), 0)
+	fit.AIC <- round(chutils::ch.IC(df.fitted[[dataEstimateCol]], df.fitted[["fEst"]], pars.n, ICtype = "AIC"), 0)
+
 	if(is.null(xlim)) xlim <- c(min(statList$lowerBound, data[[dataTargetCol]]), max(statList$upperBound, data[[dataTargetCol]]))
 	if(is.null(ylim)) ylim <- c(min(statList$lowerBound, data[[dataEstimateCol]], df.fitted$fEst), max(statList$upperBound, data[[dataEstimateCol]], df.fitted$fEst))
 	pdf(plotFileName)

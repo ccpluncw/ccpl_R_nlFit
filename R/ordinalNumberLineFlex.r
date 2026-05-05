@@ -15,14 +15,6 @@
 ordinalNumberLineFlex <- function (myTargets, parList, loops = 1000, verbose = FALSE) {
 
 	df.data <- NULL
-	# if(parList[["targetOrder"]] == "single")	{
-	# 	targetSeq <- sample(targets)
-	# 	loops <- 1
-	# }
-	# if(parList[["targetOrder"]] == "fixed") {
-	# 	targetSeq <- targets
-	# 	loops <- 1
-	# }
 
 	if(parList[["targetOrder"]] == "single")	{
 		targetSeq <- sample(myTargets)
@@ -36,9 +28,6 @@ ordinalNumberLineFlex <- function (myTargets, parList, loops = 1000, verbose = F
 
 	for(lps in 1:loops) {
 
-		# if(parList[["targetOrder"]] == "random") {
-		# 	targetSeq <- sample(targets)
-		# }
 
 		df.tmp <- ordinalNumberLine(targets = targetSeq,  firstEstimate = parList[["firstEstimate"]], upperBound = parList[["upperBound"]], lowerBound =parList[["lowerBound"]], rangeLength = parList[["rangeLength"]], memoryLength = parList[["memoryLength"]], accuracyPercent = parList[["accuracyPercent"]], numberSensitivity = parList[["numberSensitivity"]], pIncludeConceptualPoints = parList[["pIncludeConceptualPoints"]], visibleReferencePoints = parList[["visibleReferencePoints"]], conceptualReferencePoints = parList[["conceptualReferencePoints"]], targetOrder = parList[["targetOrder"]], verbose = verbose)
 		df.data <- chutils::ch.rbind(df.data, df.tmp)

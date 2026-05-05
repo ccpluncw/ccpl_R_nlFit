@@ -13,11 +13,11 @@
 #' @param targets A vector of numbers that are the to-be-estimated values.
 #' @param upperBound A number that identifes the upper point beyond which the partcipant cannot respond.  This is the upperBound of the bounded number line or the upper screen edge when the unbounded number line is used. This must be specified in "number-line units."
 #' @param lowerBound A number that identifes the lower point beyond which the partcipant cannot respond.  This is the lowerBound of the bounded and unbounded number line or the lower screen edge when the universal number line is used.  DEFAULT = 0.
-#' @param firstEstimate A proportion between 0 and 1 that idenitifies the bias of the first estimated value. The firstEstimate will always fall in the region between the visible reference points (or upper and lower bound) that retain ordinality. The first estmate is a value between 0-1, where 0 specifies the lowest point in that region, 1 specifies the highest point in that region, etc. This value will influence the remaining results.  If NULL, then a random draw from between relevant region will serve as the first estimate.  DEFAULT = NULL
+#' @param firstEstimate A number that is the first estimated value.  This value will influence the remaining results.  If NULL, then a random draw from between the upperBound and lowerBound will serve as the first estimate.  DEFAULT = NULL
 #' @param memoryLength A integer that specifies the number of previous estimates that are remembered. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). DEFAULT = legnth(targets).
 #' @param rangeLength An integer that specifies the size of the window on the vector of remembered estimates that is used to identify the bounds of the next estimate. smaller number will produce more accurate estmates.  DEFAULT = 2
 #' @param accuracyPercent A proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  DEFAULT = 0
-#' @param numberSensitivity A proportion between 0 and 1 that specifies the range of equivelance. When numberSensitivity=0, the target is not differentiated from the nearest referenece point. When numberSensitivity=1, the target is differentiated from all other targets. When 0< numberSensitivity < 1, the range of equivelence is proportional to the value. DEFAULT = 1 (perfect precision)
+#' @param numberSensitivity A proportion between 0 and 1 that specifies the precision that previous targets are remembered. Specifically, it is the range of equivelance, where all targets between a low of (numberSensitivity * target) and a high of (2-numberSensitivity) are treated as equivelent and will be put in the same place on the number-line. DEFAULT = 1 (perfect precision)
 #' @param visibleReferencePoints A vector of numbers that specify the visible (displayed) points that identify the value of positions on the number line. These are the upper and lower bound of the bounded number line, 0 and 1 for the unbounded number line, and anything the researcher uses for the universal number line or learning tasks.  Default is NULL.
 #' @param conceptualReferencePoints A vector of numbers that specify any conceptual points that the participant may use to identify the value of positions on the number line. These may be the middle of the bounded number-line, or a learned position on the number_line. Currently, conceptualReferencePoints are only modeled if they are used thoughout the task (not introduced part of the way through) Default is NULL.
 #' @param targetOrder A string specifying whether to keep the order in targets fixed ("fixed"), to ranndomize the order for every iteration of the loop ("random"), or to randomize it once and then use that order for all the loops ("single").  Default is "random".
@@ -29,8 +29,13 @@
 #' @importFrom dplyr %>%
 #' @examples ordinalNumberLine (c(2,3,4, 5, 6), 100, 0, firstEstimate = 400, rangeLength = 5, accuracyPercent = 0.5)
 
-ordinalNumberLine <- function(targets, upperBound, lowerBound = 0, firstEstimate = NULL, memoryLength = NULL, rangeLength = 1, accuracyPercent = 0, numberSensitivity = 1, pIncludeConceptualPoints = 0, visibleReferencePoints = NULL, conceptualReferencePoints = NULL, targetOrder = "random", verbose = FALSE) {
+ordinalNumberLineX <- function(targets, upperBound, lowerBound = 0, firstEstimate = NULL, memoryLength = NULL, rangeLength = 1, accuracyPercent = 0, numberSensitivity = 1, pIncludeConceptualPoints = 0, visibleReferencePoints = NULL, conceptualReferencePoints = NULL, targetOrder = "random", verbose = FALSE) {
 
+  #### these are to be added later.
+  #### numberSensitivity may have influence in analogue Stimuli (because they may not have perceptually salient differences)
+  #### but is unlikely to have influence in symbolic stimuli (because they have perceptually salient differences)
+  numberSensitivityInfluencesVisbleReferencePoints <- FALSE
+  numberSensitivityInfluencesConceptualReferencePoints <- FALSE
 
   # if targetOrder is random, then randomize the targets
   if(targetOrder == "random") {
@@ -40,13 +45,25 @@ ordinalNumberLine <- function(targets, upperBound, lowerBound = 0, firstEstimate
   numTargets <- length(targets)
   if (is.null(memoryLength)) memoryLength <- numTargets
 
+
+  #add all information for targets except the actual estimate
+#  df.data <- data.frame(trial = seq(1, numTargets, 1), target = targets, low = numberSensitivity * targets, high = (2 - numberSensitivity) * targets,  estimate = NA, targetValue = targets)
+#this accounts for negative targets
+  df.data <- data.frame(trial = seq(1, numTargets, 1), target = targets, low = ifelse(targets > 0, numberSensitivity * targets, (2 - numberSensitivity) * targets), high = ifelse(targets > 0, (2 - numberSensitivity) * targets, numberSensitivity * targets),  estimate = NA, targetValue = targets)
+
   #upper and lower bounds are just (potentially) unseen references
   #to be added below to df.reference
   df.bounds <- data.frame(trial = 0, target = c(lowerBound, upperBound), low = c(lowerBound, upperBound), high = c(lowerBound, upperBound), estimate = c(lowerBound, upperBound), targetValue = c(lowerBound, upperBound))
 
   #make visible reference points available
 	if(!is.null(visibleReferencePoints)) {
-    df.reference <- data.frame(trial = 0, target = visibleReferencePoints, low = visibleReferencePoints, high = visibleReferencePoints, estimate = visibleReferencePoints, targetValue = visibleReferencePoints)
+    if(numberSensitivityInfluencesVisbleReferencePoints) {
+      #with error - see above
+      df.reference <- data.frame(trial = 0, target = visibleReferencePoints, low = numberSensitivity * visibleReferencePoints, high = (2 - numberSensitivity) * visibleReferencePoints, estimate =  visibleReferencePoints, targetValue = visibleReferencePoints)
+    } else {
+      #with no error in identification (high=low=visibleReferencePoints)
+      df.reference <- data.frame(trial = 0, target = visibleReferencePoints, low = visibleReferencePoints, high = visibleReferencePoints, estimate = visibleReferencePoints, targetValue = visibleReferencePoints)
+    }
 
     #only add the upper and/or lower bounds are not also visible
     df.reference <- rbind(df.bounds[!(df.bounds$target %in% df.reference$target), ], df.reference)
@@ -56,41 +73,27 @@ ordinalNumberLine <- function(targets, upperBound, lowerBound = 0, firstEstimate
   }
 
   #make conceptual reference points available with error in identification (high > visibleReferencePoints > low)
-  conceptualReferencePoints.include <- NULL
   if(!is.null(conceptualReferencePoints)) {
     includeConceptual <- sample(c(T, F),length(conceptualReferencePoints) , prob = c(pIncludeConceptualPoints, (1-pIncludeConceptualPoints)), replace = T)
     if(any(includeConceptual)) {
       #include only the points identified above
       conceptualReferencePoints.include <- conceptualReferencePoints[includeConceptual]
       ### add to df.reference
-      df.reference <- unique(rbind(df.reference, data.frame(trial = 0, target = conceptualReferencePoints.include, low = conceptualReferencePoints.include, high = conceptualReferencePoints.include, estimate = conceptualReferencePoints.include, targetValue = conceptualReferencePoints.include)))
+      if(numberSensitivityInfluencesConceptualReferencePoints) {
+        #with error - see above
+        df.reference <- unique(rbind(df.reference, data.frame(trial = 0, target = conceptualReferencePoints.include, low = numberSensitivity * conceptualReferencePoints.include, high = (2 - numberSensitivity) * conceptualReferencePoints.include, estimate = conceptualReferencePoints.include, targetValue = conceptualReferencePoints.include)))
+      } else {
+        #with no error in identification (high=low=conceptualReferencePoints)
+        df.reference <- unique(rbind(df.reference, data.frame(trial = 0, target = conceptualReferencePoints.include, low = conceptualReferencePoints.include, high = conceptualReferencePoints.include, estimate = conceptualReferencePoints.include, targetValue = conceptualReferencePoints.include)))
+      }
     }
 	}
 
-  ######################
-  # numberSensitivity is a function of distance from visible and conceptual reference points, rather than the target value
-  ### also distance from conceptualReferencePoints
-
-    ######### invert numberSensitivity
-    # Invert the numberSensitivity parameter so 1 remains "high sensitivity" (Resulting in 0 error)
-    # and 0 remains "low sensitivity" (Resulting in Max error). This is to remain
-    # consistent with earlier versions
-  sensitivity_adj <- 1 - numberSensitivity
-    #########
-
-  if(!is.null(visibleReferencePoints)) {
-    references <- c(visibleReferencePoints, conceptualReferencePoints.include)
-    refDist <- sapply(targets, function(x) min(abs(references- x)))
-  } else {
-    refDist <- targets
-  }
-  df.data <- data.frame(trial = seq(1, numTargets, 1), target = targets, refDist = refDist, low = ifelse(refDist > 0, targets - (sensitivity_adj * refDist), targets + (sensitivity_adj * refDist)), high = ifelse(refDist > 0, targets + (sensitivity_adj * refDist), targets - (sensitivity_adj * refDist)),  estimate = NA, targetValue = targets)
-  df.data$refDist <- NULL
-  ######################
-
 	df.data <- rbind(df.data,df.reference)
 
-  df.data <- getEstimateNL(df.data, numTargets, upperBound = upperBound, lowerBound = lowerBound, trialCol = "trial", targetCol = "target", estimateCol = "estimate", valueCol = "targetValue", lowCol = "low", highCol = "high", memoryLength = memoryLength, rangeLength = rangeLength, numberSensitivity = numberSensitivity, accuracyPercent = accuracyPercent, firstEstimate = firstEstimate, verbose = verbose)
+	for(i in 1:numTargets) {
+    df.data[df.data$trial == i, ] <- getEstimateNL(df.data, i, trialCol = "trial", targetCol = "target", estimateCol = "estimate", valueCol = "targetValue", lowCol = "low", highCol = "high", memoryLength = memoryLength, rangeLength = rangeLength, numberSensitivity = numberSensitivity, accuracyPercent = accuracyPercent, firstEstimate = firstEstimate, verbose = verbose)
+	}
 
 	df.out <- df.data[df.data$trial > 0,c("target", "estimate")]
 	names(df.out) <- c("target", "fEst")

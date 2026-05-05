@@ -6,7 +6,9 @@
 \usage{
 getEstimateNL(
   data,
-  trialNumber,
+  totalNumTargets,
+  upperBound,
+  lowerBound = 0,
   trialCol = "trial",
   targetCol = "target",
   valueCol = "targetValue",
@@ -24,7 +26,9 @@ getEstimateNL(
 \arguments{
 \item{data}{A dataframe with the following columns: trialNumber, targetValue, estimate. It is created in ordinalNumberline() and passed to this function.}
 
-\item{trialNumber}{A number that identifes the trial number of the estimate to be made.}
+\item{upperBound}{A number that identifes the upper point beyond which the partcipant cannot respond.  This is the upperBound of the bounded number line or the upper screen edge when the unbounded number line is used. This must be specified in "number-line units."}
+
+\item{lowerBound}{A number that identifes the lower point beyond which the partcipant cannot respond.  This is the lowerBound of the bounded and unbounded number line or the lower screen edge when the universal number line is used.  DEFAULT = 0.}
 
 \item{trialCol}{A string specifying the column of data that holds the trialNumbers.  DEFAULT = "trial".}
 
@@ -42,14 +46,16 @@ getEstimateNL(
 
 \item{rangeLength}{An integer that specifies the size of the window on the vector of remembered estimates that is used to identify the bounds of the next estimate. smaller number will produce more accurate estmates.  DEFAULT = 1}
 
-\item{numberSensitivity}{A proportion between 0 and 1 that specifies the precision that previous targets are remembered. Specifically, it is the range of equivelance, where all targets between a low of (numberSensitivity * target) and a high of (2-numberSensitivity) are treated as equivelent and will be put in the same place on the number-line. DEFAULT = 1 (perfect precision)}
+\item{numberSensitivity}{A proportion between 0 and 1 that specifies the range of equivelance. When numberSensitivity=0, the target is not differentiated from the nearest referenece point. When numberSensitivity=1, the target is differentiated from all other targets. When 0< numberSensitivity < 1, the range of equivelence is proportional to the value. DEFAULT = 1 (perfect precision)}
 
 \item{accuracyPercent}{A proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  DEFAULT = 0}
 
-\item{firstEstimate}{A number that is the first estimated value.  This value will influence the remaining results.  If NULL, then a random draw from between the upperBound and lowerBound will serve as the first estimate.  DEFAULT = NULL}
+\item{firstEstimate}{A proportion between 0 and 1 that idenitifies the bias of the first estimated value. The firstEstimate will always fall in the region between the visible reference points (or upper and lower bound) that retain ordinality. The first estmate is a value between 0-1, where 0 specifies the lowest point in that region, 1 specifies the highest point in that region, etc. This value will influence the remaining results.  If NULL, then a random draw from between relevant region will serve as the first estimate.  DEFAULT = NULL}
 
 \item{verbose}{A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.
 '}
+
+\item{trialNumber}{A number that identifes the trial number of the estimate to be made.}
 }
 \value{
 a dataframe containing the target value (target) and predicted estimate (fEst).
