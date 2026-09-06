@@ -5,6 +5,36 @@ nlOutputRow <- function(presented, uniqueValues, rowStart) {
 }
 
 
+# the targets are numbers the participant places on a line, so anything the
+# process cannot order or average is caught here rather than part way through a
+# trial. An empty set of targets is allowed and gives an empty result.
+nlCheckTargets <- function(targets) {
+	if(!is.numeric(targets)) {
+		stop("nlFit: targets must be numeric, not ", class(targets)[1], ".")
+	}
+	if(any(!is.finite(targets))) {
+		stop("nlFit: targets must all be finite; ", sum(!is.finite(targets)), " are NA, NaN or infinite.")
+	}
+	invisible(NULL)
+}
+
+
+# the data a fit is scored against needs rows, and the two columns the score is
+# computed from have to be numbers.
+nlCheckFitData <- function(data, dataTargetCol, dataEstimateCol) {
+	if(is.null(nrow(data)) || nrow(data) < 1) {
+		stop("nlFit: data has no rows, so there is nothing to fit.")
+	}
+	for(column in c(dataTargetCol, dataEstimateCol)) {
+		if(is.null(data[[column]])) stop("nlFit: data has no column named '", column, "'.")
+		if(!is.numeric(data[[column]])) {
+			stop("nlFit: the data column '", column, "' must be numeric, not ", class(data[[column]])[1], ".")
+		}
+	}
+	invisible(NULL)
+}
+
+
 # the simulation numbers the presentations of a repeated target 1..k in the order
 # the rows are given, so a trial-level dataframe that numbers them any other way
 # loses rows in the join. A fit computed on part of the data, or on none of it, is
@@ -49,6 +79,8 @@ nlStopOnUnmatchedTrials <- function(matched, supplied, dataPresentationCol) {
 #'                      loops = 10)
 
 ordinalNumberLineSim <- function(targets, parList, loops = 1000, verbose = FALSE) {
+
+	nlCheckTargets(targets)
 
 	#a parameter that has a default is filled here rather than left to fail inside
 	#the trial loop

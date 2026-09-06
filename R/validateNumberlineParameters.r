@@ -1,6 +1,6 @@
 #' This function validates the number line parameters for the fitNL analysis.
 #'
-#' Function that validates the number line parameters for the fitNL analysis. A searched parameter that is out of range makes the parameter set invalid (FALSE); a missing lowerBound is a structural error and stops.
+#' Function that validates the number line parameters for the fitNL analysis. A searched parameter that is out of range makes the parameter set invalid (FALSE). An absent lowerBound is taken as 0, which is its default everywhere else in the package, so the bound-order check still runs.
 #' @param parList A list with the parameter names and values. The list element name must be the parameter name and the value is the contents.
 #''
 #' @return A boolean that specifies the parameter values as valid (TRUE) or invalid (FALSE).
@@ -15,10 +15,9 @@ validateNumberlineParameters <- function(parList) {
 	if(is.null(parList[["upperBound"]])) {
 		out <- FALSE
 	} else {
-		if(is.null(parList[["lowerBound"]])) {
-			stop("validateNumberlineParameters: parList must contain lowerBound when it contains upperBound.")
-		}
-		if(parList[["upperBound"]] < parList[["lowerBound"]]) out <- FALSE
+		#lowerBound defaults to 0 wherever it is an argument, so an absent one is 0 here too
+		lowerBound <- if(is.null(parList[["lowerBound"]])) 0 else parList[["lowerBound"]]
+		if(parList[["upperBound"]] < lowerBound) out <- FALSE
 	}
 
 	if(!is.null(parList[["memoryLength"]])) {

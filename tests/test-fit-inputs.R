@@ -49,3 +49,34 @@ for(missing in c("upperBound", "visibleReferencePoints")) {
   stopifnot(inherits(out, "try-error"))
   stopifnot(grepl(missing, conditionMessage(attr(out, "condition"))))
 }
+
+## the validator reads an absent lowerBound as 0, the same default the arguments
+## carry, so the bound-order check still runs on it
+stopifnot(validateNumberlineParameters(list(upperBound = 100)))
+stopifnot(!validateNumberlineParameters(list(upperBound = -10)))
+stopifnot(!validateNumberlineParameters(list(upperBound = 0, lowerBound = 100)))
+stopifnot(validateNumberlineParameters(list(upperBound = 100, lowerBound = 0)))
+
+## targets have to be numbers the process can place on a line
+for(bad in list(as.factor(c(10, 30)), c("10", "30"), c(10, NA), c(10, Inf))) {
+  out <- try(ordinalNumberLineSim(bad, full, loops = 5), silent = TRUE)
+  stopifnot(inherits(out, "try-error"))
+  stopifnot(grepl("targets", conditionMessage(attr(out, "condition"))))
+}
+## no targets is not an error: there is simply nothing to estimate
+stopifnot(nrow(ordinalNumberLineSim(numeric(0), full, loops = 5)) == 0)
+
+## the data a fit is scored against needs rows, and numbers in both columns
+statFit <- function(d) getOrdinalNumberlineFit(d, upperBound = 100, lowerBound = 0,
+                          visibleReferencePoints = c(0, 100), loops = 5, pars.n = 3)
+badData <- list(avg[0, ],
+                data.frame(target = as.factor(c(10, 30)), estimate = c(18, 33)),
+                data.frame(target = c(10, 30), estimate = c("18", "33")),
+                data.frame(notTarget = c(10, 30), estimate = c(18, 33)))
+for(d in badData) {
+  stopifnot(inherits(try(statFit(d), silent = TRUE), "try-error"))
+  pdf(file.path(tempdir(), "nlFitTest.pdf"))
+  out <- try(outputNLfitStats(d, full, pars.n = 3, loops = 5), silent = TRUE)
+  dev.off()
+  stopifnot(inherits(out, "try-error"))
+}

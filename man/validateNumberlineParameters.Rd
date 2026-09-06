@@ -14,7 +14,7 @@ validateNumberlineParameters(parList)
 A boolean that specifies the parameter values as valid (TRUE) or invalid (FALSE).
 }
 \description{
-Function that validates the number line parameters for the fitNL analysis. A searched parameter that is out of range makes the parameter set invalid (FALSE); a missing lowerBound is a structural error and stops.
+Function that validates the number line parameters for the fitNL analysis. A searched parameter that is out of range makes the parameter set invalid (FALSE). An absent lowerBound is taken as 0, which is its default everywhere else in the package, so the bound-order check still runs.
 }
 \examples{
 validateNumberlineParameters (parList = list(upperBound = 100, lowerBound = 0, firstEstimate = 0.5))

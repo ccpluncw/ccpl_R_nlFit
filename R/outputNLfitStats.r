@@ -35,6 +35,7 @@ outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstim
 	if(missing(pars.n) || is.null(pars.n)) {
 		stop("outputNLfitStats: pars.n is required. Set it to the number of parameters the search varied.")
 	}
+	nlCheckFitData(data, dataTargetCol, dataEstimateCol)
 
 	df.fitted <- ordinalNumberLineSim(data[[dataTargetCol]], statList, loops=loops)
 

@@ -71,8 +71,9 @@ existing parameter.
   and the fit is exactly what it was. A trial-level fit has more data points per
   participant at the same `pars.n`, so its BIC and AIC are not comparable with
   those of an averaged fit.
-* Hygiene: the bound-order check in `validateNumberlineParameters()` now runs; a
-  missing `lowerBound` stops with a message. Debugging prints are gone.
+* Hygiene: the bound-order check in `validateNumberlineParameters()` now runs,
+  with an absent `lowerBound` taken as 0, which is its default everywhere else in
+  the package. Debugging prints are gone.
   `outputNLfitStats()` opens a pdf device only when given a file name and a
   sink only when given a sink file name. The dplyr dependency is replaced with
   `aggregate()`.

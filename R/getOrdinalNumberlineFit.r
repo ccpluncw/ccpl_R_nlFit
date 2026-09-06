@@ -41,6 +41,7 @@ getOrdinalNumberlineFit <- function(data, upperBound, lowerBound = 0,firstEstima
   if(is.null(visibleReferencePoints)) {
     stop("getOrdinalNumberlineFit: visibleReferencePoints is required. Pass the bounds for a bounded number line, or the labelled values for a universal number line.")
   }
+  nlCheckFitData(data, dataTargetCol, dataEstimateCol)
 
   parList <- list(upperBound = upperBound, lowerBound = lowerBound,firstEstimate = firstEstimate, memoryLength = memoryLength, numberSensitivity = numberSensitivity, pIncludeConceptualPoints = pIncludeConceptualPoints, visibleReferencePoints = visibleReferencePoints, conceptualReferencePoints = conceptualReferencePoints, accuracyPercent = accuracyPercent, targetOrder = targetOrder)
 
