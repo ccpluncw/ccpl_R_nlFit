@@ -64,6 +64,7 @@ getOrdinalNumberlineFit <- function(data, upperBound, lowerBound = 0,firstEstima
 		#presentation column, so the presentations of a repeated value are averaged too.
 		if(!is.null(dataPresentationCol) && dataPresentationCol %in% names(data)) {
 			df.dataFit <- merge(data, df.fitted, by.x = c(dataTargetCol, dataPresentationCol), by.y = c("target", "presentation"))
+			nlStopOnUnmatchedTrials(nrow(df.dataFit), nrow(data), dataPresentationCol)
 		} else {
 			df.fitted <- aggregate(df.fitted["fEst"], by = list(target = df.fitted$target), FUN = mean, na.rm = TRUE)
 			df.dataFit <- merge(data, df.fitted, by.x = dataTargetCol, by.y = "target")

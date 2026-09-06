@@ -65,7 +65,11 @@ nlBracket <- function(rem, target) {
 
 
 # a relabelled bound keeps its new value for the rest of the run, so the relabel
-# is written back to the store and the store is put back into value order.
+# is written back to the store and the store is put back into value order. Only
+# reference rows are written back: when the extreme remembered row is a trial row
+# rather than a bound, the new value holds for this trial's placement but is not
+# remembered, and it is the reference point that shares its value, if there is
+# one, that keeps the relabel.
 nlRelabelReference <- function(mem, fromValue, toValue) {
 	hit <- mem$trial == 0 & mem$value == fromValue
 	if(!any(hit)) return(mem)

@@ -40,7 +40,7 @@ ordinalNumberLine(
 
 \item{conceptualReferencePoints}{A vector of numbers that specify any conceptual points that the participant may use to identify the value of positions on the number line. These may be the middle of the bounded number-line, or a learned position on the number_line. Currently, conceptualReferencePoints are only modeled if they are used thoughout the task (not introduced part of the way through) Default is NULL.}
 
-\item{targetOrder}{A string specifying whether to keep the order in targets fixed ("fixed"), to ranndomize the order for every iteration of the loop ("random"), or to randomize it once and then use that order for all the loops ("single").  Default is "random".}
+\item{targetOrder}{A string specifying whether to draw a fresh random order of the targets for this run ("random") or to take them in the order given ("fixed"). "single" also takes them in the order given: it means "one order held across the loops", which is a property of the loops and so belongs to ordinalNumberLineSim(), which draws that order and passes it here.  Default is "random".}
 
 \item{verbose}{A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.
 '}

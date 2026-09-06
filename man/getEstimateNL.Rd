@@ -23,7 +23,7 @@ getEstimateNL(
 )
 }
 \arguments{
-\item{data}{A dataframe with the following columns: trialNumber, targetValue, estimate. Rows with a trial number of 0 are the reference points. It is created in ordinalNumberline() and passed to this function.}
+\item{data}{A dataframe with one row per trial and one row per reference point, holding the columns named by trialCol, targetCol, valueCol, lowCol, highCol and estimateCol. Trials are numbered 1 through totalNumTargets; a trial number of 0 marks a reference point, whose estimate is its position on the line. It is created in ordinalNumberLine() and passed to this function.}
 
 \item{totalNumTargets}{An integer specifying the number of trials (targets) in data. The function estimates trials 1 through totalNumTargets in order.}
 
@@ -65,11 +65,13 @@ every reference point. ordinalNumberLine() prepares the dataframe and calls this
 directly only to drive the process from a dataframe you have built yourself.
 }
 \details{
-A target at or beyond a bound has no remembered value on that side, so the bound is
+A target that reaches a bound has no remembered value on that side, so the bound is
 relabelled to the target and keeps that value for the rest of the run. The relabel moves
 the target and value columns of the bound's row only: its estimate and its range of
 equivalent numbers stay where they were, so a relabelled bound never satisfies an
-equivalence test.
+equivalence test. The two ends are not symmetric: the lower guard fires at or below the
+lower bound, the upper guard only strictly above the upper bound. A target sitting exactly
+on a bound therefore relabels that bound to its own value, which changes nothing.
 }
 \examples{
 df <- data.frame(trial = c(1, 2, 0, 0),

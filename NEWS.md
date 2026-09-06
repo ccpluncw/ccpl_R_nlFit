@@ -29,6 +29,12 @@ existing parameter.
   `eLow + firstEstimate * (eHigh - eLow)` regardless of its value, so with a
   memory window shorter than the target set the fitted function becomes a
   staircase whose step heights are set by `firstEstimate`.
+* The relabelling of a bound now writes the value column it matches on, so a
+  relabelled bound carries its new value as well as its new position. That value
+  is what the accuracy component aims at, so predictions move for a target beyond
+  a screen edge when `accuracyPercent` is above 0 and `numberSensitivity` is below
+  1. Nothing else is affected: at `accuracyPercent = 0` the value is never read,
+  and at `numberSensitivity = 1` a relabelled bound cannot be matched.
 * The equivalence test is symmetric among remembered estimates: two numbers are
   confusable when either falls in the other's range, so confusability no longer
   depends on which was seen first. A target is still compared to a reference
@@ -50,7 +56,7 @@ existing parameter.
 * The simulation is rebuilt around numeric vectors held in value order, and each
   step of the model - remembered set, bracket, equivalence, placement, response -
   is its own function. Estimates are unchanged run for run, down to the sequence
-  of random draws, and a run is about 17 times faster.
+  of random draws, and a run is more than ten times faster.
 * `ordinalNumberLineSim()` replaces `ordinalNumberLineFlex()` and
   `ordinalNumberLineFlex_mc()`, which are removed, along with the `multicore`
   argument of `getOrdinalNumberlineFit()` and `outputNLfitStats()` and the
@@ -66,8 +72,7 @@ existing parameter.
   participant at the same `pars.n`, so its BIC and AIC are not comparable with
   those of an averaged fit.
 * Hygiene: the bound-order check in `validateNumberlineParameters()` now runs; a
-  missing `lowerBound` stops with a message. The out-of-bounds relabel writes the
-  value column it matches on. Debugging prints are gone.
+  missing `lowerBound` stops with a message. Debugging prints are gone.
   `outputNLfitStats()` opens a pdf device only when given a file name and a
   sink only when given a sink file name. The dplyr dependency is replaced with
   `aggregate()`.

@@ -42,6 +42,7 @@ outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstim
 	#presentation column, so the presentations of a repeated value are averaged too.
 	if(!is.null(dataPresentationCol) && dataPresentationCol %in% names(data)) {
 		df.fitted <- merge(df.fitted, data, by.x = c("target", "presentation"), by.y = c(dataTargetCol, dataPresentationCol))
+		nlStopOnUnmatchedTrials(nrow(df.fitted), nrow(data), dataPresentationCol)
 	} else {
 		df.fitted <- aggregate(df.fitted["fEst"], by = list(target = df.fitted$target), FUN = mean, na.rm = TRUE)
 		df.fitted <- merge(df.fitted, data,  by.x = "target", by.y = dataTargetCol)

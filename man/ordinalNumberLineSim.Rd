@@ -9,7 +9,7 @@ ordinalNumberLineSim(targets, parList, loops = 1000, verbose = FALSE)
 \arguments{
 \item{targets}{A vector of numbers that are the to-be-estimated values. A value may appear more than once.}
 
-\item{parList}{A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. The required elements are: firstEstimate; upperBound; lowerBound; memoryLength; numberSensitivity; accuracyPercent; pIncludeConceptualPoints; visibleReferencePoints; conceptualReferencePoints; targetOrder.}
+\item{parList}{A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. upperBound and visibleReferencePoints have no default and must be present. firstEstimate, memoryLength and conceptualReferencePoints may be absent or NULL, which is their default. lowerBound, numberSensitivity, accuracyPercent, pIncludeConceptualPoints and targetOrder are filled with their defaults by fillNumberlineParList() when they are absent.}
 
 \item{loops}{A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution. Loops are collapsed to 1 when the run is deterministic, that is, when the target order is fixed or drawn once and there is no conceptual-point inclusion draw to average over.  Default = 1000.}
 
@@ -23,9 +23,12 @@ A dataframe with one row per (target value, presentation) containing the target 
 Function that runs the ordinalNumberLine simulation loops times and returns the mean
 predicted estimate of each target. The estimates are averaged by target value and by
 the occurrence number of that value within a run, so a target value presented more than
-once gets one row per presentation rather than a single collapsed row. The k-th
-presentation of a value sits earlier in the run on average than the (k+1)-th, so the two
-have different expected estimates even under a random target order.
+once gets one row per presentation rather than a single collapsed row. The first
+presentation of a value sits earlier in the run on average than the later ones, so it
+has a different expected estimate even under a random target order. The presentations
+after the first often carry the same estimate as each other: once a value has been
+estimated the repeat falls in its own earlier range of equivalent numbers and collapses
+onto that estimate, so k presentations usually give two distinct predictions, not k.
 }
 \examples{
 ordinalNumberLineSim(c(2, 3, 4, 5, 6),

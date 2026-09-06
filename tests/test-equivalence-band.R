@@ -24,3 +24,18 @@ stopifnot(isTRUE(all.equal(run(c(15, 85, 50), 1), c(15, 85, 50))))
 
 ## the placement is unaffected: the anchors are the same two rows either way
 stopifnot(isTRUE(all.equal(run(c(15, 75, 50), 0), c(50, 75, 62.5))))
+
+## The reverse half of the test applies only to remembered estimates: a reference
+## point is always discriminable from the target, however coarse the target's own
+## resolution. Without that restriction, at numberSensitivity = 0 every target
+## would be treated as the same number as its nearest label and, with all the
+## weight on accuracy, would be reported as that label's value.
+snapCheck <- function(targets)
+  ordinalNumberLine(targets, upperBound = 100, lowerBound = 0,
+                    firstEstimate = NULL, memoryLength = length(targets),
+                    numberSensitivity = 0, accuracyPercent = 1,
+                    pIncludeConceptualPoints = 0,
+                    visibleReferencePoints = c(0, 50, 100),
+                    conceptualReferencePoints = NULL, targetOrder = "fixed")$fEst
+
+stopifnot(isTRUE(all.equal(snapCheck(c(30, 55, 80)), c(30, 55, 80))))
