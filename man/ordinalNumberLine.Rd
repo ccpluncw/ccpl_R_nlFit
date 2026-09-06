@@ -20,7 +20,7 @@ ordinalNumberLine(
 )
 }
 \arguments{
-\item{targets}{A vector of numbers that are the to-be-estimated values.}
+\item{targets}{A vector of numbers that are the to-be-estimated values. A value may appear more than once; each occurrence is a separate trial and is numbered in the presentation column of the output.}
 
 \item{upperBound}{A number that identifes the upper point beyond which the partcipant cannot respond. In the bounded task this is the upper end of the number line and is also passed as a visible reference point. In the universal task it is the upper screen edge and is normally not a visible reference point. This must be specified in "number-line units."}
 
@@ -46,7 +46,7 @@ ordinalNumberLine(
 '}
 }
 \value{
-a dataframe containing the target value (target) and predicted estimate (fEst).
+A dataframe with one row per trial, in the order the trials were presented, containing the target value (target), the predicted estimate (fEst), and the occurrence number of that target value within the run (presentation).
 }
 \description{
 Function that simulates the numberLine process and return the predited estimates.
@@ -59,6 +59,9 @@ which specifies how finely numbers near a reference point are discriminated. Fin
 accuracyPercent specifies the influence of accuracy on the estimates.  This is a proportion,
 between 0 and 1, whereby estimate is calculated as follows:
 estimate = (estimate based on algroithm * 1-accuracyPercent) + presented target * accuracyPercent
+}
+\details{
+This is one run of the task. Use ordinalNumberLineSim() to average the estimates over many runs.
 }
 \examples{
 ordinalNumberLine(c(2, 3, 4, 5, 6), upperBound = 10, lowerBound = 0,

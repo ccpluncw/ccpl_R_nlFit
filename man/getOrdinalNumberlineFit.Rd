@@ -22,11 +22,11 @@ getOrdinalNumberlineFit(
   minimizeStat = "BIC",
   pars.n,
   verbose = FALSE,
-  multicore = FALSE
+  dataPresentationCol = "presentation"
 )
 }
 \arguments{
-\item{data}{This is a dataframe that must contain the following columns: target; estimate. The dataset can also contain columns that effect code the influence of different parameters (to be implemented).}
+\item{data}{This is a dataframe that must contain the following columns: target; estimate. It may hold one row per target, the usual case, or one row per trial with a presentation column, in which case the fit is trial level. A trial-level dataframe has more rows per participant than an averaged one at the same pars.n, so its BIC and AIC are on a different scale and are not comparable with those of an averaged fit. The dataset can also contain columns that effect code the influence of different parameters (to be implemented).}
 
 \item{upperBound}{A number that identifes the upper point beyond which the partcipant cannot respond. In the bounded task this is the upper end of the number line and is also passed as a visible reference point. In the universal task it is the upper screen edge.}
 
@@ -58,10 +58,10 @@ getOrdinalNumberlineFit(
 
 \item{pars.n}{The number of free parameters, that is, the number of parameters the search varies. This is required; there is no default.}
 
-\item{verbose}{A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.}
-
-\item{multicore}{A boolean that specifies whether to run the process on multiple cores.  Default is FALSE.
+\item{verbose}{A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.
 '}
+
+\item{dataPresentationCol}{A string that identifies the name of the column in data that numbers the occurrences of a repeated target value, counted in the order they were presented. When data has that column the simulation is matched to the data trial by trial, on target and presentation. When it does not, the simulated estimates are averaged over the presentations of each value and matched on target alone, which is what an averaged dataset needs. The default is "presentation".}
 }
 \value{
 The minimization statistic for the fit of the model to the data.  This is the value that will be miniized by the optimization program.

@@ -1,10 +1,11 @@
 #' This function outputs the results of the fitNL analysis.
 #'
 #' Function that outputs the results of the fitNL analysis
-#' @param data This is a dataframe that must contain the following columns: target; estimate. The dataset can also contain columns that effect code the influence of different parameters (to be implemented).
+#' @param data This is a dataframe that must contain the following columns: target; estimate. It may hold one row per target, the usual case, or one row per trial with a presentation column, in which case the fit is trial level. A trial-level dataframe has more rows per participant than an averaged one at the same pars.n, so its BIC and AIC are on a different scale and are not comparable with those of an averaged fit. The dataset can also contain columns that effect code the influence of different parameters (to be implemented).
 #' @param statList A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. The required elements are: firstEstimate; upperBound; lowerBound; memoryLength; targetOrder; numberSensitivity; accuracyPercent; pIncludeConceptualPoints; visibleReferencePoints; conceptualReferencePoints.
 #' @param dataTargetCol A string that identifies the name of the column in data that contains the target values. The default is "target"
 #' @param dataEstimateCol A string that identifies the name of the column in data that contains the participant's estimate values. The default is "estimate"
+#' @param dataPresentationCol A string that identifies the name of the column in data that numbers the occurrences of a repeated target value, counted in the order they were presented. When data has that column the simulation is matched to the data trial by trial, on target and presentation. When it does not, the simulated estimates are averaged over the presentations of each value and matched on target alone, which is what an averaged dataset needs. The default is "presentation".
 #' @param pars.n The number of free parameters, that is, the number of parameters the search varied. This is required; there is no default.
 #' @param loops A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution.  Default is 1000.
 #' @param sinkFilename A string that identifies the name of file (.txt) in which the fit statistics will be saved. The default is NULL, whereby the fit statistics are written to the console.
@@ -13,7 +14,6 @@
 #' @param xlim A vector of two numbers giving the x axis limits of the plot. When NULL, the limits span the bounds and the targets in data. Default is NULL.
 #' @param ylim A vector of two numbers giving the y axis limits of the plot. When NULL, the limits span the bounds, the estimates in data, and the fitted estimates. Default is NULL.
 #' @param seed The random seed the caller set before running the fit. It is recorded in the output header so a run can be reproduced. The function does not set the seed itself. Default is NULL, whereby no seed is reported.
-#' @param multicore A boolean that specifies whether to run the process on multiple cores.  Default is FALSE.
 #''
 #' @return The function returns a list containing (1) a list of the parameter values and fit statistics (`runStats`), and (2) a dataframe (`df.fitted`) that contains the "data" plus the fitted values from the model (fEst))
 #' @keywords ordinalNumberline fit statistics
@@ -21,6 +21,7 @@
 #' @importFrom grDevices pdf dev.off
 #' @importFrom graphics abline lines text
 #' @importFrom utils packageVersion
+#' @importFrom stats aggregate
 #' @examples
 #' df <- data.frame(target = c(10, 30, 50, 70, 90), estimate = c(20, 35, 48, 66, 88))
 #' statList <- list(upperBound = 100, lowerBound = 0, firstEstimate = 0.5,
@@ -29,19 +30,22 @@
 #'                  conceptualReferencePoints = NULL, targetOrder = "fixed")
 #' outputNLfitStats(df, statList, pars.n = 3, loops = 10)
 
-outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstimateCol = "estimate", pars.n, loops = 1000, sinkFilename = NULL, appendSinkFile = TRUE, plotFileName = NULL, xlim = NULL, ylim = NULL, seed = NULL, multicore = FALSE) {
+outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstimateCol = "estimate", pars.n, loops = 1000, sinkFilename = NULL, appendSinkFile = TRUE, plotFileName = NULL, xlim = NULL, ylim = NULL, seed = NULL, dataPresentationCol = "presentation") {
 
 	if(missing(pars.n) || is.null(pars.n)) {
 		stop("outputNLfitStats: pars.n is required. Set it to the number of parameters the search varied.")
 	}
 
-	if(multicore) {
-		df.fitted <- ordinalNumberLineFlex_mc (data[[dataTargetCol]], statList, loops=loops)
-	} else {
-		df.fitted <- ordinalNumberLineFlex (data[[dataTargetCol]], statList, loops=loops)
-	}
+	df.fitted <- ordinalNumberLineSim(data[[dataTargetCol]], statList, loops=loops)
 
-	df.fitted <- merge(df.fitted, data,  by.x = "target", by.y = dataTargetCol)
+	#trial-level data are matched presentation by presentation; averaged data have no
+	#presentation column, so the presentations of a repeated value are averaged too.
+	if(!is.null(dataPresentationCol) && dataPresentationCol %in% names(data)) {
+		df.fitted <- merge(df.fitted, data, by.x = c("target", "presentation"), by.y = c(dataTargetCol, dataPresentationCol))
+	} else {
+		df.fitted <- aggregate(df.fitted["fEst"], by = list(target = df.fitted$target), FUN = mean, na.rm = TRUE)
+		df.fitted <- merge(df.fitted, data,  by.x = "target", by.y = dataTargetCol)
+	}
 
 	fit.r2 <- round(chutils::ch.R2(df.fitted[[dataEstimateCol]], df.fitted[["fEst"]]),2)
 	fit.BIC <- round(chutils::ch.IC(df.fitted[[dataEstimateCol]], df.fitted[["fEst"]], pars.n, ICtype = "BIC"), 0)

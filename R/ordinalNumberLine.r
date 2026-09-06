@@ -1,3 +1,51 @@
+# which conceptual points the participant has on this run. Each point is drawn
+# independently, once per run, and is then present on every trial of that run.
+nlDrawConceptual <- function(conceptualReferencePoints, pIncludeConceptualPoints) {
+	if(is.null(conceptualReferencePoints)) return(NULL)
+	included <- sample(c(TRUE, FALSE), length(conceptualReferencePoints),
+					   prob = c(pIncludeConceptualPoints, (1 - pIncludeConceptualPoints)), replace = TRUE)
+	if(any(included)) conceptualReferencePoints[included] else NULL
+}
+
+
+# the range of equivalent numbers around each target. The half width is the
+# distance to the nearest reference point scaled by the inverted sensitivity, so
+# numbers near a landmark are discriminated finely and numbers far from one
+# coarsely. The bounds do not set the scale here: only the points the participant
+# can see or holds conceptually do.
+nlBands <- function(targets, numberSensitivity, references) {
+	halfWidth <- (1 - numberSensitivity) * do.call(pmin, lapply(references, function(r) abs(targets - r)))
+	list(low = targets - halfWidth, high = targets + halfWidth)
+}
+
+
+# one run of the task: draw the conceptual points, build the reference frame and
+# the equivalence ranges, then walk the trials. The targets are taken in the
+# order given unless targetOrder asks for a fresh permutation. The presented
+# order is returned alongside the estimates because the caller needs both.
+nlSimulateRun <- function(targets, upperBound, lowerBound, firstEstimate, memoryLength,
+						  accuracyPercent, numberSensitivity, pIncludeConceptualPoints,
+						  visibleReferencePoints, conceptualReferencePoints, targetOrder, verbose = FALSE) {
+
+	if(targetOrder == "random") targets <- sample(targets)
+
+	numTargets <- length(targets)
+	if(is.null(memoryLength)) memoryLength <- numTargets
+
+	conceptualIncluded <- nlDrawConceptual(conceptualReferencePoints, pIncludeConceptualPoints)
+	reference <- nlReferenceStore(lowerBound, upperBound, visibleReferencePoints,
+								  conceptualIncluded, keyOffset = numTargets)
+	bands <- nlBands(targets, numberSensitivity, c(visibleReferencePoints, conceptualIncluded))
+
+	run <- nlRunTrials(targets = targets, labels = targets, low = bands$low, high = bands$high,
+					   keys = seq_len(numTargets), reference = reference, memoryLength = memoryLength,
+					   accuracyPercent = accuracyPercent, firstEstimate = firstEstimate,
+					   lowerBound = lowerBound, upperBound = upperBound, verbose = verbose)
+
+	list(targets = targets, estimate = run$estimate)
+}
+
+
 #' This function simulates the numberLine process and return the predited estimates.
 #'
 #' Function that simulates the numberLine process and return the predited estimates.
@@ -11,7 +59,9 @@
 #' between 0 and 1, whereby estimate is calculated as follows:
 #' estimate = (estimate based on algroithm * 1-accuracyPercent) + presented target * accuracyPercent
 #'
-#' @param targets A vector of numbers that are the to-be-estimated values.
+#' This is one run of the task. Use ordinalNumberLineSim() to average the estimates over many runs.
+#'
+#' @param targets A vector of numbers that are the to-be-estimated values. A value may appear more than once; each occurrence is a separate trial and is numbered in the presentation column of the output.
 #' @param upperBound A number that identifes the upper point beyond which the partcipant cannot respond. In the bounded task this is the upper end of the number line and is also passed as a visible reference point. In the universal task it is the upper screen edge and is normally not a visible reference point. This must be specified in "number-line units."
 #' @param lowerBound A number that identifes the lower point beyond which the partcipant cannot respond. In the bounded task this is the lower end of the number line and is also passed as a visible reference point. In the universal task it is the lower screen edge and is normally not a visible reference point.  DEFAULT = 0.
 #' @param firstEstimate A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. 0 places the estimate at the bottom of the region between the two anchors, 1 at the top. In the bounded task this is the first trial only; in the universal task it recurs for the first target in each region between labelled points, and again in any region whose estimates have dropped out of the memory window. A conceptual reference point counts as a reference point, so whether firstEstimate applies on a given trial depends on which conceptual points were drawn for that run.  If NULL, the midpoint of the region is used.  DEFAULT = NULL
@@ -24,7 +74,7 @@
 #' @param targetOrder A string specifying whether to keep the order in targets fixed ("fixed"), to ranndomize the order for every iteration of the loop ("random"), or to randomize it once and then use that order for all the loops ("single").  Default is "random".
 #' @param verbose A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.
 #''
-#' @return a dataframe containing the target value (target) and predicted estimate (fEst).
+#' @return A dataframe with one row per trial, in the order the trials were presented, containing the target value (target), the predicted estimate (fEst), and the occurrence number of that target value within the run (presentation).
 #' @keywords ordinalNumberline number line
 #' @export
 #' @examples
@@ -40,59 +90,14 @@ ordinalNumberLine <- function(targets, upperBound, lowerBound = 0, firstEstimate
     stop("ordinalNumberLine: visibleReferencePoints is required. Pass the bounds for a bounded number line, or the labelled values for a universal number line.")
   }
 
-  # if targetOrder is random, then randomize the targets
-  if(targetOrder == "random") {
-    targets <- sample(targets)
-  }
+  run <- nlSimulateRun(targets = targets, upperBound = upperBound, lowerBound = lowerBound,
+					   firstEstimate = firstEstimate, memoryLength = memoryLength,
+					   accuracyPercent = accuracyPercent, numberSensitivity = numberSensitivity,
+					   pIncludeConceptualPoints = pIncludeConceptualPoints,
+					   visibleReferencePoints = visibleReferencePoints,
+					   conceptualReferencePoints = conceptualReferencePoints,
+					   targetOrder = targetOrder, verbose = verbose)
 
-  numTargets <- length(targets)
-  if (is.null(memoryLength)) memoryLength <- numTargets
-
-  #upper and lower bounds are just (potentially) unseen references
-  #to be added below to df.reference
-  df.bounds <- data.frame(trial = 0, target = c(lowerBound, upperBound), low = c(lowerBound, upperBound), high = c(lowerBound, upperBound), estimate = c(lowerBound, upperBound), targetValue = c(lowerBound, upperBound))
-
-  #make visible reference points available
-  df.reference <- data.frame(trial = 0, target = visibleReferencePoints, low = visibleReferencePoints, high = visibleReferencePoints, estimate = visibleReferencePoints, targetValue = visibleReferencePoints)
-
-  #only add the upper and/or lower bounds are not also visible
-  df.reference <- rbind(df.bounds[!(df.bounds$target %in% df.reference$target), ], df.reference)
-
-  #make conceptual reference points available with error in identification (high > visibleReferencePoints > low)
-  conceptualReferencePoints.include <- NULL
-  if(!is.null(conceptualReferencePoints)) {
-    includeConceptual <- sample(c(T, F),length(conceptualReferencePoints) , prob = c(pIncludeConceptualPoints, (1-pIncludeConceptualPoints)), replace = T)
-    if(any(includeConceptual)) {
-      #include only the points identified above
-      conceptualReferencePoints.include <- conceptualReferencePoints[includeConceptual]
-      ### add to df.reference
-      df.reference <- unique(rbind(df.reference, data.frame(trial = 0, target = conceptualReferencePoints.include, low = conceptualReferencePoints.include, high = conceptualReferencePoints.include, estimate = conceptualReferencePoints.include, targetValue = conceptualReferencePoints.include)))
-    }
-	}
-
-  ######################
-  # numberSensitivity is a function of distance from visible and conceptual reference points, rather than the target value
-
-    ######### invert numberSensitivity
-    # Invert the numberSensitivity parameter so 1 remains "high sensitivity" (Resulting in 0 error)
-    # and 0 remains "low sensitivity" (Resulting in Max error).
-  sensitivity_adj <- 1 - numberSensitivity
-    #########
-
-  #distance to the nearest reference point sets the half-width of each target's range of
-  #equivalent numbers, so the range is symmetric around the target.
-  references <- c(visibleReferencePoints, conceptualReferencePoints.include)
-  refDist <- sapply(targets, function(x) min(abs(references- x)))
-
-  df.data <- data.frame(trial = seq(1, numTargets, 1), target = targets, low = targets - (sensitivity_adj * refDist), high = targets + (sensitivity_adj * refDist),  estimate = NA, targetValue = targets)
-  ######################
-
-	df.data <- rbind(df.data,df.reference)
-
-  df.data <- getEstimateNL(df.data, numTargets, upperBound = upperBound, lowerBound = lowerBound, trialCol = "trial", targetCol = "target", estimateCol = "estimate", valueCol = "targetValue", lowCol = "low", highCol = "high", memoryLength = memoryLength, numberSensitivity = numberSensitivity, accuracyPercent = accuracyPercent, firstEstimate = firstEstimate, verbose = verbose)
-
-	df.out <- df.data[df.data$trial > 0,c("target", "estimate")]
-	names(df.out) <- c("target", "fEst")
-
-  return(df.out)
+  data.frame(target = run$targets, fEst = run$estimate,
+			 presentation = nlPresentationIndex(run$targets))
 }

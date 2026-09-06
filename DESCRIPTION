@@ -23,10 +23,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Imports: 
     chutils,
-    doParallel,
-    foreach,
     grDevices,
     graphics,
-    parallel,
     stats,
     utils

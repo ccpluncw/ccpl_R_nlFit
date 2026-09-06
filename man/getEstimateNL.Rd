@@ -2,7 +2,7 @@
 % Please edit documentation in R/getEstimateNL.r
 \name{getEstimateNL}
 \alias{getEstimateNL}
-\title{This function simulates the numberLine process and return the predited estimate for a single trial.}
+\title{This function simulates the numberLine process and returns the predicted estimates.}
 \usage{
 getEstimateNL(
   data,
@@ -23,7 +23,7 @@ getEstimateNL(
 )
 }
 \arguments{
-\item{data}{A dataframe with the following columns: trialNumber, targetValue, estimate. It is created in ordinalNumberline() and passed to this function.}
+\item{data}{A dataframe with the following columns: trialNumber, targetValue, estimate. Rows with a trial number of 0 are the reference points. It is created in ordinalNumberline() and passed to this function.}
 
 \item{totalNumTargets}{An integer specifying the number of trials (targets) in data. The function estimates trials 1 through totalNumTargets in order.}
 
@@ -43,9 +43,9 @@ getEstimateNL(
 
 \item{estimateCol}{A string specifying the column of data that holds the estimated values.  DEFAULT = "estimate".}
 
-\item{memoryLength}{An integer that specifies the number of previous estimates that are remembered. On trial t the remembered set is the estimates from trials t-memoryLength through t-1, plus every reference point. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). DEFAULT = length(targets).}
+\item{memoryLength}{An integer that specifies the number of previous estimates that are remembered. On trial t the remembered set is the estimates from trials t-memoryLength through t-1, plus every reference point. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). DEFAULT = totalNumTargets.}
 
-\item{numberSensitivity}{A proportion between 0 and 1 that specifies the range of equivelance. When numberSensitivity=0, the target is not differentiated from the nearest referenece point. When numberSensitivity=1, the target is differentiated from all other targets. When 0< numberSensitivity < 1, the range of equivelence is proportional to the distance to the nearest reference point. Two numbers are treated as equivalent when either one falls in the other's range, though a target is compared to a reference point in one direction only.  DEFAULT = 1 (perfect precision)}
+\item{numberSensitivity}{A proportion between 0 and 1 that specifies the range of equivelance. The ranges are computed in ordinalNumberLine() and read from the lowCol and highCol columns of data, so this argument does not affect the estimates here.  DEFAULT = 1 (perfect precision)}
 
 \item{accuracyPercent}{A proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  DEFAULT = 0}
 
@@ -55,10 +55,21 @@ getEstimateNL(
 '}
 }
 \value{
-a dataframe containing the target value (target) and predicted estimate (fEst).
+The dataframe that was passed in, with the estimate column filled in for the trial rows and with any relabelled bound carrying its new value.
 }
 \description{
-Function simulates the numberLine process and return the predited estimate for a single trial
+Function that walks the trials in a prepared dataframe and fills in the predicted estimate
+for each of them. Each trial is placed ordinally between the two remembered values that
+bracket it, where the remembered values are the estimates inside the memory window plus
+every reference point. ordinalNumberLine() prepares the dataframe and calls this; call it
+directly only to drive the process from a dataframe you have built yourself.
+}
+\details{
+A target at or beyond a bound has no remembered value on that side, so the bound is
+relabelled to the target and keeps that value for the rest of the run. The relabel moves
+the target and value columns of the bound's row only: its estimate and its range of
+equivalent numbers stay where they were, so a relabelled bound never satisfies an
+equivalence test.
 }
 \examples{
 df <- data.frame(trial = c(1, 2, 0, 0),

@@ -1,7 +1,7 @@
 #' This function fits the ordinalNumberLine and returns a fit statistic.
 #'
 #' Function that fits fits the ordinalNumberLine and returns a fit statistic
-#' @param data This is a dataframe that must contain the following columns: target; estimate. The dataset can also contain columns that effect code the influence of different parameters (to be implemented).
+#' @param data This is a dataframe that must contain the following columns: target; estimate. It may hold one row per target, the usual case, or one row per trial with a presentation column, in which case the fit is trial level. A trial-level dataframe has more rows per participant than an averaged one at the same pars.n, so its BIC and AIC are on a different scale and are not comparable with those of an averaged fit. The dataset can also contain columns that effect code the influence of different parameters (to be implemented).
 #' @param upperBound A number that identifes the upper point beyond which the partcipant cannot respond. In the bounded task this is the upper end of the number line and is also passed as a visible reference point. In the universal task it is the upper screen edge.
 #' @param lowerBound A number that identifes the lower point beyond which the partcipant cannot respond. In the bounded task this is the lower end of the number line and is also passed as a visible reference point. In the universal task it is the lower screen edge. DEFAULT = 0.
 #' @param firstEstimate A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. 0 places the estimate at the bottom of the region between the two anchors, 1 at the top.  If NULL, the midpoint of the region is used.  DEFAULT = NULL
@@ -15,14 +15,15 @@
 #' @param targetOrder A string specifying whether to keep the order in targets fixed ("fixed"), to ranndomize the order for every iteration of the loop ("random"), or to randomize it once and then use that order for all the loops ("single").  Default is "random".
 #' @param dataTargetCol A string that identifies the name of the column in data that contains the target values. The default is "target"
 #' @param dataEstimateCol A string that identifies the name of the column in data that contains the participant's estimate values. The default is "estimate"
+#' @param dataPresentationCol A string that identifies the name of the column in data that numbers the occurrences of a repeated target value, counted in the order they were presented. When data has that column the simulation is matched to the data trial by trial, on target and presentation. When it does not, the simulated estimates are averaged over the presentations of each value and matched on target alone, which is what an averaged dataset needs. The default is "presentation".
 #' @param minimizeStat A string that specifies which statistic to minimize when optimizing the model fit.  The options are: "BIC" , "AIC" , or "R_Square". Default is "BIC".
 #' @param pars.n The number of free parameters, that is, the number of parameters the search varies. This is required; there is no default.
 #' @param verbose A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.
-#' @param multicore A boolean that specifies whether to run the process on multiple cores.  Default is FALSE.
 #''
 #' @return The minimization statistic for the fit of the model to the data.  This is the value that will be miniized by the optimization program.
 #' @keywords ordinalNumberline ordinal number-line
 #' @export
+#' @importFrom stats aggregate
 #' @examples
 #' df <- data.frame(target = c(10, 30, 50, 70, 90), estimate = c(20, 35, 48, 66, 88))
 #' getOrdinalNumberlineFit(df, upperBound = 100, lowerBound = 0,
@@ -30,7 +31,7 @@
 #'                         firstEstimate = 0.5, numberSensitivity = 0.8,
 #'                         accuracyPercent = 0.2, loops = 10, pars.n = 3)
 
-getOrdinalNumberlineFit <- function(data, upperBound, lowerBound = 0,firstEstimate = NULL, memoryLength = NULL, accuracyPercent = 0, numberSensitivity = 1, pIncludeConceptualPoints = 0, visibleReferencePoints = NULL, conceptualReferencePoints = NULL, loops = 1000, targetOrder = "random", dataTargetCol = "target", dataEstimateCol = "estimate", minimizeStat = 'BIC', pars.n, verbose = FALSE, multicore = FALSE) {
+getOrdinalNumberlineFit <- function(data, upperBound, lowerBound = 0,firstEstimate = NULL, memoryLength = NULL, accuracyPercent = 0, numberSensitivity = 1, pIncludeConceptualPoints = 0, visibleReferencePoints = NULL, conceptualReferencePoints = NULL, loops = 1000, targetOrder = "random", dataTargetCol = "target", dataEstimateCol = "estimate", minimizeStat = 'BIC', pars.n, verbose = FALSE, dataPresentationCol = "presentation") {
 
   #these are structural inputs, not points in the search space, so a bad one stops the
   #run rather than scoring Inf and leaving the search without a signal.
@@ -57,13 +58,16 @@ getOrdinalNumberlineFit <- function(data, upperBound, lowerBound = 0,firstEstima
 
 		parList <- fillNumberlineParList(parList)
 
-		if(multicore) {
-			df.fitted <- ordinalNumberLineFlex_mc(data[[dataTargetCol]], parList, loops=loops, verbose = verbose)
-		} else {
-			df.fitted <- ordinalNumberLineFlex(data[[dataTargetCol]], parList, loops=loops, verbose = verbose)
-		}
+		df.fitted <- ordinalNumberLineSim(data[[dataTargetCol]], parList, loops=loops, verbose = verbose)
 
-		df.dataFit <- merge(data, df.fitted, by.x = dataTargetCol, by.y = "target")
+		#trial-level data are matched presentation by presentation; averaged data have no
+		#presentation column, so the presentations of a repeated value are averaged too.
+		if(!is.null(dataPresentationCol) && dataPresentationCol %in% names(data)) {
+			df.dataFit <- merge(data, df.fitted, by.x = c(dataTargetCol, dataPresentationCol), by.y = c("target", "presentation"))
+		} else {
+			df.fitted <- aggregate(df.fitted["fEst"], by = list(target = df.fitted$target), FUN = mean, na.rm = TRUE)
+			df.dataFit <- merge(data, df.fitted, by.x = dataTargetCol, by.y = "target")
+		}
     #get potential minimization variable (1-r2)
     out.rss <- 1 - chutils::ch.R2(df.dataFit[[dataEstimateCol]], df.dataFit[["fEst"]])
 

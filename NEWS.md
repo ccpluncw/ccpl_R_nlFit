@@ -47,11 +47,28 @@ existing parameter.
 * `pars.n` is required in `getOrdinalNumberlineFit()` and `outputNLfitStats()`.
   It previously fell back to the length of the parameter list, which counted
   bounds and reference vectors as free parameters.
+* The simulation is rebuilt around numeric vectors held in value order, and each
+  step of the model - remembered set, bracket, equivalence, placement, response -
+  is its own function. Estimates are unchanged run for run, down to the sequence
+  of random draws, and a run is about 17 times faster.
+* `ordinalNumberLineSim()` replaces `ordinalNumberLineFlex()` and
+  `ordinalNumberLineFlex_mc()`, which are removed, along with the `multicore`
+  argument of `getOrdinalNumberlineFit()` and `outputNLfitStats()` and the
+  `foreach`, `doParallel` and `parallel` dependencies. Parallelism belongs at the
+  grid-search level, not inside a single objective evaluation.
+* `ordinalNumberLine()` gains a `presentation` column numbering the occurrences
+  of a repeated target value, and `ordinalNumberLineSim()` averages the loops by
+  target value and presentation rather than by value alone, so a repeated target
+  no longer collapses to one row. `getOrdinalNumberlineFit()` and
+  `outputNLfitStats()` gain `dataPresentationCol`: with that column in the data
+  the fit is trial level, and without it the presentations are averaged together
+  and the fit is exactly what it was. A trial-level fit has more data points per
+  participant at the same `pars.n`, so its BIC and AIC are not comparable with
+  those of an averaged fit.
 * Hygiene: the bound-order check in `validateNumberlineParameters()` now runs; a
   missing `lowerBound` stops with a message. The out-of-bounds relabel writes the
-  value column it matches on. Debugging prints are gone. The parallel back end no
-  longer writes `log.txt` into the working directory and stops its cluster on
-  exit. `outputNLfitStats()` opens a pdf device only when given a file name and a
+  value column it matches on. Debugging prints are gone.
+  `outputNLfitStats()` opens a pdf device only when given a file name and a
   sink only when given a sink file name. The dplyr dependency is replaced with
   `aggregate()`.
 * `outputNLfitStats()` records the package version, the run time, the number of

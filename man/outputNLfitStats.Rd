@@ -17,11 +17,11 @@ outputNLfitStats(
   xlim = NULL,
   ylim = NULL,
   seed = NULL,
-  multicore = FALSE
+  dataPresentationCol = "presentation"
 )
 }
 \arguments{
-\item{data}{This is a dataframe that must contain the following columns: target; estimate. The dataset can also contain columns that effect code the influence of different parameters (to be implemented).}
+\item{data}{This is a dataframe that must contain the following columns: target; estimate. It may hold one row per target, the usual case, or one row per trial with a presentation column, in which case the fit is trial level. A trial-level dataframe has more rows per participant than an averaged one at the same pars.n, so its BIC and AIC are on a different scale and are not comparable with those of an averaged fit. The dataset can also contain columns that effect code the influence of different parameters (to be implemented).}
 
 \item{statList}{A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. The required elements are: firstEstimate; upperBound; lowerBound; memoryLength; targetOrder; numberSensitivity; accuracyPercent; pIncludeConceptualPoints; visibleReferencePoints; conceptualReferencePoints.}
 
@@ -43,10 +43,10 @@ outputNLfitStats(
 
 \item{ylim}{A vector of two numbers giving the y axis limits of the plot. When NULL, the limits span the bounds, the estimates in data, and the fitted estimates. Default is NULL.}
 
-\item{seed}{The random seed the caller set before running the fit. It is recorded in the output header so a run can be reproduced. The function does not set the seed itself. Default is NULL, whereby no seed is reported.}
-
-\item{multicore}{A boolean that specifies whether to run the process on multiple cores.  Default is FALSE.
+\item{seed}{The random seed the caller set before running the fit. It is recorded in the output header so a run can be reproduced. The function does not set the seed itself. Default is NULL, whereby no seed is reported.
 '}
+
+\item{dataPresentationCol}{A string that identifies the name of the column in data that numbers the occurrences of a repeated target value, counted in the order they were presented. When data has that column the simulation is matched to the data trial by trial, on target and presentation. When it does not, the simulated estimates are averaged over the presentations of each value and matched on target alone, which is what an averaged dataset needs. The default is "presentation".}
 }
 \value{
 The function returns a list containing (1) a list of the parameter values and fit statistics (\code{runStats}), and (2) a dataframe (\code{df.fitted}) that contains the "data" plus the fitted values from the model (fEst))
