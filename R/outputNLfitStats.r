@@ -2,22 +2,38 @@
 #'
 #' Function that outputs the results of the fitNL analysis
 #' @param data This is a dataframe that must contain the following columns: target; estimate. The dataset can also contain columns that effect code the influence of different parameters (to be implemented).
-#' @param parList A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. The required elements are: firstEstimate; upperBound; lowerBound; rangeLength; memoryLength; targetOrder; numberSensitivity, accuracyPercent.
+#' @param statList A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. The required elements are: firstEstimate; upperBound; lowerBound; memoryLength; targetOrder; numberSensitivity; accuracyPercent; pIncludeConceptualPoints; visibleReferencePoints; conceptualReferencePoints.
 #' @param dataTargetCol A string that identifies the name of the column in data that contains the target values. The default is "target"
 #' @param dataEstimateCol A string that identifies the name of the column in data that contains the participant's estimate values. The default is "estimate"
-#' @param pars.n The number of free parameters. When NULL, the program will assume the maximum number of free parameters. Default = 4.
+#' @param pars.n The number of free parameters, that is, the number of parameters the search varied. This is required; there is no default.
 #' @param loops A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution.  Default is 1000.
-#' @param sinkFilename A string that identifies the name of file (.txt) in which the fit statistics will be saved. The default is NULL, whereby the fit statistics will not be saved.
+#' @param sinkFilename A string that identifies the name of file (.txt) in which the fit statistics will be saved. The default is NULL, whereby the fit statistics are written to the console.
 #' @param appendSinkFile A boolean to specify whether the new data should be appended to the output file (TRUE) or write over the output file (FALSE). Default = TRUE
-#' @param plotFilename A string that identifies the name of file (.pdf) in which the data plot will be saved. The default is NULL, whereby the plot will not be saved.
+#' @param plotFileName A string that identifies the name of file (.pdf) in which the data plot will be saved. The default is NULL, whereby the plot is drawn on the current graphics device.
+#' @param xlim A vector of two numbers giving the x axis limits of the plot. When NULL, the limits span the bounds and the targets in data. Default is NULL.
+#' @param ylim A vector of two numbers giving the y axis limits of the plot. When NULL, the limits span the bounds, the estimates in data, and the fitted estimates. Default is NULL.
+#' @param seed The random seed the caller set before running the fit. It is recorded in the output header so a run can be reproduced. The function does not set the seed itself. Default is NULL, whereby no seed is reported.
 #' @param multicore A boolean that specifies whether to run the process on multiple cores.  Default is FALSE.
 #''
-#' @return The function returns a list containing (1) a list of the parameter values and fit statistics [runStats], and (2) a dataframe [df.fitted] that contains the "data" plus the fitted values from the model (fEst))
+#' @return The function returns a list containing (1) a list of the parameter values and fit statistics (`runStats`), and (2) a dataframe (`df.fitted`) that contains the "data" plus the fitted values from the model (fEst))
 #' @keywords ordinalNumberline fit statistics
 #' @export
-#' @examples outputNLfitStats (data, parList = list(upperBound = 100, lowerBound = 0, firstEstimate = 50, rangeLength = 4, memoryLength = 20, ))
+#' @importFrom grDevices pdf dev.off
+#' @importFrom graphics abline lines text
+#' @importFrom utils packageVersion
+#' @examples
+#' df <- data.frame(target = c(10, 30, 50, 70, 90), estimate = c(20, 35, 48, 66, 88))
+#' statList <- list(upperBound = 100, lowerBound = 0, firstEstimate = 0.5,
+#'                  memoryLength = 5, numberSensitivity = 0.8, accuracyPercent = 0.2,
+#'                  pIncludeConceptualPoints = 0, visibleReferencePoints = c(0, 100),
+#'                  conceptualReferencePoints = NULL, targetOrder = "fixed")
+#' outputNLfitStats(df, statList, pars.n = 3, loops = 10)
 
-outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstimateCol = "estimate", pars.n = 1, loops = 1000, sinkFilename = NULL, appendSinkFile = TRUE, plotFileName = NULL, xlim = NULL, ylim = NULL, multicore = FALSE) {
+outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstimateCol = "estimate", pars.n, loops = 1000, sinkFilename = NULL, appendSinkFile = TRUE, plotFileName = NULL, xlim = NULL, ylim = NULL, seed = NULL, multicore = FALSE) {
+
+	if(missing(pars.n) || is.null(pars.n)) {
+		stop("outputNLfitStats: pars.n is required. Set it to the number of parameters the search varied.")
+	}
 
 	if(multicore) {
 		df.fitted <- ordinalNumberLineFlex_mc (data[[dataTargetCol]], statList, loops=loops)
@@ -33,17 +49,25 @@ outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstim
 
 	if(is.null(xlim)) xlim <- c(min(statList$lowerBound, data[[dataTargetCol]]), max(statList$upperBound, data[[dataTargetCol]]))
 	if(is.null(ylim)) ylim <- c(min(statList$lowerBound, data[[dataEstimateCol]], df.fitted$fEst), max(statList$upperBound, data[[dataEstimateCol]], df.fitted$fEst))
-	pdf(plotFileName)
+
+	#without a file name the plot belongs on whatever device the caller already has open
+	if(!is.null(plotFileName)) pdf(plotFileName)
 		plot(data[[dataEstimateCol]] ~ data[[dataTargetCol]], ylim = ylim, xlim = xlim)
-		#with(data, plot(estimate ~ target, ylim = yLim, xlim = xLim))
 		with(df.fitted, lines(fEst ~ target, col = "blue"))
 		text( (0.7*xlim[2]), (0.15*ylim[2]), paste("r2 =", fit.r2, "BIC =", fit.BIC))
 		abline(0,1)
 		cat("\nr2 =", fit.r2 , "; BIC =", fit.BIC, "\n\n")
-	dev.off()
+	if(!is.null(plotFileName)) dev.off()
 
-  sink(sinkFilename, append = appendSinkFile)
+	#without a file name the statistics go to the console; sink(NULL) would otherwise
+	#close a connection the caller opened.
+  if(!is.null(sinkFilename)) sink(sinkFilename, append = appendSinkFile)
     cat("\n\n **************** nlFit Statistics **************** \n\n")
+
+    cat("nlFit version = ", as.character(packageVersion("nlFit")), "\n\n")
+    cat("Run date = ", format(Sys.time()), "\n\n")
+    cat("Loops = ", loops, "\n\n")
+		if(!is.null(seed)) cat("Seed = ", seed, "\n\n")
 
     cat("\n\n ******** Number Line Info ******** \n\n")
     cat("Lower Bound = ", statList$lowerBound, "\n\n")
@@ -59,7 +83,6 @@ outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstim
     cat("\n\n ******** Parameter Values ******** \n\n")
 
     cat("First Estimate = ", statList$firstEstimate, "\n\n")
-    cat("Range Length = ", statList$rangeLength, "\n\n")
     cat("Memory Length = ", statList$memoryLength, "\n\n")
     cat("Number Sensitivity = ", statList$numberSensitivity, "\n\n")
     cat("Accuracy Percent = ", statList$accuracyPercent, "\n\n")
@@ -73,7 +96,7 @@ outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstim
     cat(" BIC = ", fit.BIC, "\n")
     cat(" AIC = ", fit.AIC, "\n")
 
-  sink(NULL)
+  if(!is.null(sinkFilename)) sink(NULL)
 
 
   fitStats <- list(AIC = fit.AIC, BIC = fit.BIC, r2 = fit.r2, freeParameters = pars.n)

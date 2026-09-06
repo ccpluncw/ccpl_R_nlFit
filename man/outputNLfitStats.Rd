@@ -9,46 +9,58 @@ outputNLfitStats(
   statList,
   dataTargetCol = "target",
   dataEstimateCol = "estimate",
-  pars.n = 1,
+  pars.n,
   loops = 1000,
   sinkFilename = NULL,
   appendSinkFile = TRUE,
   plotFileName = NULL,
   xlim = NULL,
   ylim = NULL,
+  seed = NULL,
   multicore = FALSE
 )
 }
 \arguments{
 \item{data}{This is a dataframe that must contain the following columns: target; estimate. The dataset can also contain columns that effect code the influence of different parameters (to be implemented).}
 
+\item{statList}{A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. The required elements are: firstEstimate; upperBound; lowerBound; memoryLength; targetOrder; numberSensitivity; accuracyPercent; pIncludeConceptualPoints; visibleReferencePoints; conceptualReferencePoints.}
+
 \item{dataTargetCol}{A string that identifies the name of the column in data that contains the target values. The default is "target"}
 
 \item{dataEstimateCol}{A string that identifies the name of the column in data that contains the participant's estimate values. The default is "estimate"}
 
-\item{pars.n}{The number of free parameters. When NULL, the program will assume the maximum number of free parameters. Default = 4.}
+\item{pars.n}{The number of free parameters, that is, the number of parameters the search varied. This is required; there is no default.}
 
 \item{loops}{A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution.  Default is 1000.}
 
-\item{sinkFilename}{A string that identifies the name of file (.txt) in which the fit statistics will be saved. The default is NULL, whereby the fit statistics will not be saved.}
+\item{sinkFilename}{A string that identifies the name of file (.txt) in which the fit statistics will be saved. The default is NULL, whereby the fit statistics are written to the console.}
 
 \item{appendSinkFile}{A boolean to specify whether the new data should be appended to the output file (TRUE) or write over the output file (FALSE). Default = TRUE}
 
+\item{plotFileName}{A string that identifies the name of file (.pdf) in which the data plot will be saved. The default is NULL, whereby the plot is drawn on the current graphics device.}
+
+\item{xlim}{A vector of two numbers giving the x axis limits of the plot. When NULL, the limits span the bounds and the targets in data. Default is NULL.}
+
+\item{ylim}{A vector of two numbers giving the y axis limits of the plot. When NULL, the limits span the bounds, the estimates in data, and the fitted estimates. Default is NULL.}
+
+\item{seed}{The random seed the caller set before running the fit. It is recorded in the output header so a run can be reproduced. The function does not set the seed itself. Default is NULL, whereby no seed is reported.}
+
 \item{multicore}{A boolean that specifies whether to run the process on multiple cores.  Default is FALSE.
 '}
-
-\item{parList}{A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. The required elements are: firstEstimate; upperBound; lowerBound; rangeLength; memoryLength; targetOrder; numberSensitivity, accuracyPercent.}
-
-\item{plotFilename}{A string that identifies the name of file (.pdf) in which the data plot will be saved. The default is NULL, whereby the plot will not be saved.}
 }
 \value{
-The function returns a list containing (1) a list of the parameter values and fit statistics \link{runStats}, and (2) a dataframe \link{df.fitted} that contains the "data" plus the fitted values from the model (fEst))
+The function returns a list containing (1) a list of the parameter values and fit statistics (\code{runStats}), and (2) a dataframe (\code{df.fitted}) that contains the "data" plus the fitted values from the model (fEst))
 }
 \description{
 Function that outputs the results of the fitNL analysis
 }
 \examples{
-outputNLfitStats (data, parList = list(upperBound = 100, lowerBound = 0, firstEstimate = 50, rangeLength = 4, memoryLength = 20, ))
+df <- data.frame(target = c(10, 30, 50, 70, 90), estimate = c(20, 35, 48, 66, 88))
+statList <- list(upperBound = 100, lowerBound = 0, firstEstimate = 0.5,
+                 memoryLength = 5, numberSensitivity = 0.8, accuracyPercent = 0.2,
+                 pIncludeConceptualPoints = 0, visibleReferencePoints = c(0, 100),
+                 conceptualReferencePoints = NULL, targetOrder = "fixed")
+outputNLfitStats(df, statList, pars.n = 3, loops = 10)
 }
 \keyword{fit}
 \keyword{ordinalNumberline}

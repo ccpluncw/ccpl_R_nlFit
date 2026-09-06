@@ -7,14 +7,14 @@
 ordinalNumberLineFlex(myTargets, parList, loops = 1000, verbose = FALSE)
 }
 \arguments{
-\item{parList}{A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. The required elements are: firstEstimate; upperBound; lowerBound; rangeLength; memoryLength; numberSensitivity; accuracyPercent; referencePoinsts; targetOrder.}
+\item{myTargets}{A vector of numbers that are the to-be-estimated values.}
 
-\item{loops}{A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution.  Default = 1000.}
+\item{parList}{A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. The required elements are: firstEstimate; upperBound; lowerBound; memoryLength; numberSensitivity; accuracyPercent; pIncludeConceptualPoints; visibleReferencePoints; conceptualReferencePoints; targetOrder.}
+
+\item{loops}{A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution. Loops are collapsed to 1 when the run is deterministic, that is, when the target order is fixed or drawn once and there is no conceptual-point inclusion draw to average over.  Default = 1000.}
 
 \item{verbose}{A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.
 '}
-
-\item{targets}{A vector of numbers that are the to-be-estimated values.}
 }
 \value{
 A dataframe containing the target value (target) and predicted estimate (fEst).
@@ -23,7 +23,15 @@ A dataframe containing the target value (target) and predicted estimate (fEst).
 Function that runs the ordinalNumberLine with some flexible parameters
 }
 \examples{
-ordinalNumberLineFles (c(2,3,4, 5, 6), 100, 0, firstEstimate = 400, rangeLength = 5, accuracyPercent = 0.5, targetOrder = "random", loops = 100)
+ordinalNumberLineFlex(c(2, 3, 4, 5, 6),
+                      parList = list(upperBound = 10, lowerBound = 0,
+                                     firstEstimate = 0.5, memoryLength = 5,
+                                     numberSensitivity = 1, accuracyPercent = 0.5,
+                                     pIncludeConceptualPoints = 0,
+                                     visibleReferencePoints = c(0, 10),
+                                     conceptualReferencePoints = NULL,
+                                     targetOrder = "fixed"),
+                      loops = 10)
 }
 \keyword{number-line}
 \keyword{ordinal}

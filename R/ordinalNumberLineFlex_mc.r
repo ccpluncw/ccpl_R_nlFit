@@ -7,13 +7,15 @@
 #' @param targets A vector of numbers representing the values to be estimated.
 #' @param parList A list containing parameter names and their values for the
 #'   `ordinalNumberLine` analysis. Required elements are: `firstEstimate`,
-#'   `upperBound`, `lowerBound`, `rangeLength`, `memoryLength`,
-#'   `numberSensitivity`, `accuracyPercent`, `pIncludeConceptualPoints`,
-#'   `visibleReferencePoints`, `conceptualReferencePoints`, and `targetOrder`.
+#'   `upperBound`, `lowerBound`, `memoryLength`, `numberSensitivity`,
+#'   `accuracyPercent`, `pIncludeConceptualPoints`, `visibleReferencePoints`,
+#'   `conceptualReferencePoints`, and `targetOrder`.
 #' @param loops An integer specifying the number of simulation runs to perform.
 #'   Each run can be executed in parallel, potentially speeding up the overall
 #'   estimation process. Higher values generally lead to more stable and precise
-#'   estimates but increase computation time. Default = 1000.
+#'   estimates but increase computation time. Loops are collapsed to 1 when the run
+#'   is deterministic, that is, when the target order is fixed or drawn once and
+#'   there is no conceptual-point inclusion draw to average over. Default = 1000.
 #' @param verbose A logical value indicating whether to print intermediate steps
 #'   for debugging purposes. Default = FALSE.
 #' @param numCores An integer specifying the number of CPU cores to use for parallel
@@ -24,16 +26,16 @@
 #'
 #' @keywords ordinalNumberline parallel ordinal number-line
 #' @export
+#' @importFrom stats aggregate
 #' @importFrom foreach %dopar%
 #' @examples
 #' \dontrun{
 #'   # Example with 2 cores
 #'   my_targets <- c(2, 3, 4, 5, 6)
 #'   my_parList <- list(
-#'     firstEstimate = 400,
+#'     firstEstimate = 0.5,
 #'     upperBound = 100,
 #'     lowerBound = 0,
-#'     rangeLength = 5,
 #'     memoryLength = 3,
 #'     accuracyPercent = 0.5,
 #'     numberSensitivity = 1,
@@ -63,42 +65,39 @@
 
 ordinalNumberLineFlex_mc <- function (targets, parList, loops = 1000, verbose = FALSE, numCores = NULL) {
 
-	#numTargets <- length(targets)
 	df.data <- NULL
 
 	# Determine the number of cores to use
 	if(is.null(numCores)) {
 		numCores <- parallel::detectCores() - 1 # Use all but one core by default
 	}
-	cl <- parallel::makeCluster(numCores, outfile='log.txt')
+	cl <- parallel::makeCluster(numCores)
+	on.exit(parallel::stopCluster(cl), add = TRUE)
 	doParallel::registerDoParallel(cl)
-#	doParallel::registerDoParallel(cores = numCores)
+
+	#a fixed or once-drawn target order still varies across loops when conceptual points
+	#are drawn in, so only collapse the loops when nothing is left to average over.
+	deterministicRun <- is.null(parList[["conceptualReferencePoints"]]) ||
+		(!is.null(parList[["pIncludeConceptualPoints"]]) &&
+			(parList[["pIncludeConceptualPoints"]] == 0 || parList[["pIncludeConceptualPoints"]] == 1))
 
 	# Handle single or fixed target order outside the loop
 	if(parList[["targetOrder"]] == "single")	{
 		targetSeq <- sample(targets)
-		loops <- 1
+		if(deterministicRun) loops <- 1
 	} else {
 		targetSeq <- targets
 	}
-	if(parList[["targetOrder"]] == "fixed") {
+	if(parList[["targetOrder"]] == "fixed" && deterministicRun) {
 		loops <- 1
 	}
 
 
-	results <- foreach::foreach(lps = 1:loops, .combine = chutils::ch.rbind, .packages = c("dplyr", "chutils")) %dopar% {
-		# if(parList[["targetOrder"]] == "random") {
-		# 	current_targets <- sample(targets)
-		# } else {
-		# 	current_targets <- targetSeq # Use the pre-determined sequence
-		# }
-
-		# Assuming ordinalNumberLine is in the same package or its dependencies
+	results <- foreach::foreach(lps = 1:loops, .combine = chutils::ch.rbind, .packages = c("nlFit", "chutils")) %dopar% {
 		ordinalNumberLine(targets = targetSeq,
 						  firstEstimate = parList[["firstEstimate"]],
 						  upperBound = parList[["upperBound"]],
 						  lowerBound = parList[["lowerBound"]],
-						  rangeLength = parList[["rangeLength"]],
 						  memoryLength = parList[["memoryLength"]],
 						  accuracyPercent = parList[["accuracyPercent"]],
 						  numberSensitivity = parList[["numberSensitivity"]],
@@ -109,10 +108,8 @@ ordinalNumberLineFlex_mc <- function (targets, parList, loops = 1000, verbose = 
 						  verbose = verbose)
 	}
 
-	parallel::stopCluster(cl)
-	rm(cl)
-
-	df.sum <- results %>% dplyr::group_by (target) %>% dplyr::summarize (fEst = mean(fEst, na.rm = T))
+	#keep a target whose estimates are all NA rather than dropping it from the output
+	df.sum <- aggregate(results["fEst"], by = list(target = results$target), FUN = mean, na.rm = TRUE)
 	return(df.sum)
 
 }

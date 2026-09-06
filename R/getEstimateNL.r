@@ -3,7 +3,7 @@
 #' Function simulates the numberLine process and return the predited estimate for a single trial
 #'
 #' @param data A dataframe with the following columns: trialNumber, targetValue, estimate. It is created in ordinalNumberline() and passed to this function.
-#' @param trialNumber A number that identifes the trial number of the estimate to be made.
+#' @param totalNumTargets An integer specifying the number of trials (targets) in data. The function estimates trials 1 through totalNumTargets in order.
 #' @param upperBound A number that identifes the upper point beyond which the partcipant cannot respond.  This is the upperBound of the bounded number line or the upper screen edge when the unbounded number line is used. This must be specified in "number-line units."
 #' @param lowerBound A number that identifes the lower point beyond which the partcipant cannot respond.  This is the lowerBound of the bounded and unbounded number line or the lower screen edge when the universal number line is used.  DEFAULT = 0.
 #' @param trialCol A string specifying the column of data that holds the trialNumbers.  DEFAULT = "trial".
@@ -12,29 +12,34 @@
 #' @param valueCol A string specifying the column of data that holds the target values.  DEFAULT = "targetValue".
 #' @param lowCol A string specifying the column of data that holds the lower value of the range of equivelent numbers derived from numberSensitivity.  DEFAULT = "low".
 #' @param highCol A string specifying the column of data that holds the higher value of the range of equivelent numbers derived from numberSensitivity.  DEFAULT = "high".
-#' @param memoryLength A integer that specifies the number of previous estimates that are remembered. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). DEFAULT = legnth(targets).
-#' @param rangeLength An integer that specifies the size of the window on the vector of remembered estimates that is used to identify the bounds of the next estimate. smaller number will produce more accurate estmates.  DEFAULT = 1
-#' @param numberSensitivity A proportion between 0 and 1 that specifies the range of equivelance. When numberSensitivity=0, the target is not differentiated from the nearest referenece point. When numberSensitivity=1, the target is differentiated from all other targets. When 0< numberSensitivity < 1, the range of equivelence is proportional to the value. DEFAULT = 1 (perfect precision)
+#' @param memoryLength An integer that specifies the number of previous estimates that are remembered. On trial t the remembered set is the estimates from trials t-memoryLength through t-1, plus every reference point. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). DEFAULT = length(targets).
+#' @param numberSensitivity A proportion between 0 and 1 that specifies the range of equivelance. When numberSensitivity=0, the target is not differentiated from the nearest referenece point. When numberSensitivity=1, the target is differentiated from all other targets. When 0< numberSensitivity < 1, the range of equivelence is proportional to the distance to the nearest reference point. Two numbers are treated as equivalent when either one falls in the other's range, though a target is compared to a reference point in one direction only.  DEFAULT = 1 (perfect precision)
 #' @param accuracyPercent A proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  DEFAULT = 0
-#' @param firstEstimate A proportion between 0 and 1 that idenitifies the bias of the first estimated value. The firstEstimate will always fall in the region between the visible reference points (or upper and lower bound) that retain ordinality. The first estmate is a value between 0-1, where 0 specifies the lowest point in that region, 1 specifies the highest point in that region, etc. This value will influence the remaining results.  If NULL, then a random draw from between relevant region will serve as the first estimate.  DEFAULT = NULL
+#' @param firstEstimate A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. 0 places the estimate at the bottom of the region between the two anchors, 1 at the top. Because a conceptual reference point is a reference point, whether firstEstimate applies on a given trial depends on which conceptual points were included on that run.  If NULL, the midpoint of the region is used.  DEFAULT = NULL
 #' @param verbose A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.
 #''
 #' @return a dataframe containing the target value (target) and predicted estimate (fEst).
 #' @keywords ordinalNumberline number line
 #' @export
-#' @importFrom dplyr %>%
-#' @examples ordinalNumberLine (c(2,3,4, 5, 6), 100, 0, firstEstimate = 400, rangeLength = 5, accuracyPercent = 0.5)
+#' @examples
+#' df <- data.frame(trial = c(1, 2, 0, 0),
+#'                  target = c(30, 70, 0, 100),
+#'                  low = c(30, 70, 0, 100),
+#'                  high = c(30, 70, 0, 100),
+#'                  estimate = c(NA, NA, 0, 100),
+#'                  targetValue = c(30, 70, 0, 100))
+#' getEstimateNL(df, totalNumTargets = 2, upperBound = 100, lowerBound = 0, memoryLength = 2)
 
 
-getEstimateNL <- function(data, totalNumTargets, upperBound, lowerBound = 0, trialCol = "trial", targetCol = "target", valueCol = "targetValue", lowCol = "low", highCol = "high", estimateCol = "estimate",  memoryLength = NULL, rangeLength = 1, numberSensitivity = 1, accuracyPercent = 0, firstEstimate = NULL, verbose = FALSE)  {
+getEstimateNL <- function(data, totalNumTargets, upperBound, lowerBound = 0, trialCol = "trial", targetCol = "target", valueCol = "targetValue", lowCol = "low", highCol = "high", estimateCol = "estimate",  memoryLength = NULL, numberSensitivity = 1, accuracyPercent = 0, firstEstimate = NULL, verbose = FALSE)  {
 
 	for(trialNumber in 1:totalNumTargets) {
 		# get the current target
 		targetInfo <- data[data[[trialCol]] == trialNumber, ]
 
 		#get the "previousTargets" but limit the memoryLength plus the reference points
-		if((trialNumber - memoryLength - 1) < 1) previousTargets <- data[data[[trialCol]] <= (trialNumber - 1), ]
-			else previousTargets <- data[(data[[trialCol]] >= (trialNumber - memoryLength - 1) & data[[trialCol]] <= (trialNumber - 1)) | data[[trialCol]] ==0, ]
+		if((trialNumber - memoryLength) < 1) previousTargets <- data[data[[trialCol]] <= (trialNumber - 1), ]
+			else previousTargets <- data[(data[[trialCol]] >= (trialNumber - memoryLength) & data[[trialCol]] <= (trialNumber - 1)) | data[[trialCol]] ==0, ]
 
 		#get the number of "previous targets"
 		numTargets <- nrow(previousTargets)
@@ -44,57 +49,65 @@ getEstimateNL <- function(data, totalNumTargets, upperBound, lowerBound = 0, tri
 		adjacentIdx <- which.min(abs(previousTargets[[targetCol]] - targetInfo[[targetCol]]))
 
 		#if the current target > adjacent target, then assign it as the minimum. Otherwise assign the
-		#index before it as the minimum. Here, we take into account "rangeLength" which
-		#determines how large a window to check for numberSensitivity overlap
-		minAdjIdx <- ifelse(targetInfo[[targetCol]] > previousTargets[adjacentIdx, targetCol], adjacentIdx - (rangeLength - 1), adjacentIdx - rangeLength)
+		#index before it as the minimum. The anchors are the immediate rank neighbours on each side;
+		#the offset is fixed at one rank and may become a parameter in the future.
+		minAdjIdx <- ifelse(targetInfo[[targetCol]] > previousTargets[adjacentIdx, targetCol], adjacentIdx, adjacentIdx - 1)
 
 		## Here, we are adjusting the lowerBound value to that of the new, lower valued target
-		## This happens when there are target values below the lowerBound
-		## This should only happen 1) when the experimenter creates this situation or
-		## 2) the respondent beleives the lowerBound is closer to the visibleReferencePoints than it actually is in the Universal NumberLine. This is apparent when minAdjIdx < 1.
+		## This happens when the target lies at or beyond the lowerBound, so there is no
+		## remembered value below it. This should only happen 1) when the experimenter creates
+		## this situation or 2) the respondent beleives the lowerBound is closer to the
+		## visibleReferencePoints than it actually is in the Universal NumberLine.
+		## The relabel moves the bound row's target and targetValue only: its low, high and
+		## estimate stay at the original bound, so it can never satisfy an equivalence test.
 		if(minAdjIdx < 1) {
 			#set minAdjIdx = 1
 			minAdjIdx <- 1
 			#assign the lower bound value to the current target in original data
 			data[data[[targetCol]] == previousTargets[adjacentIdx, targetCol] & data[[trialCol]] == 0, targetCol] <- targetInfo[[targetCol]]
-			data[data[[valueCol]] == previousTargets[adjacentIdx, targetCol] & data[[trialCol]] == 0, targetCol] <- targetInfo[[targetCol]]
+			data[data[[valueCol]] == previousTargets[adjacentIdx, targetCol] & data[[trialCol]] == 0, valueCol] <- targetInfo[[targetCol]]
 			#assign the lower bound value to the current target in previous targets
 			previousTargets[adjacentIdx, targetCol] <- targetInfo[[targetCol]]
 			previousTargets[adjacentIdx, valueCol] <- targetInfo[[targetCol]]
 		}
 
-		maxAdjIdx <- ifelse(targetInfo[[targetCol]] > previousTargets[adjacentIdx, targetCol], adjacentIdx + rangeLength, adjacentIdx + (rangeLength - 1))
+		maxAdjIdx <- ifelse(targetInfo[[targetCol]] > previousTargets[adjacentIdx, targetCol], adjacentIdx + 1, adjacentIdx)
 		if(maxAdjIdx > numTargets) {
 			maxAdjIdx <- numTargets
 			#assign the upper bound value to the current target in original data
 			data[data[[targetCol]] == previousTargets[adjacentIdx, targetCol] & data[[trialCol]] == 0, targetCol] <- targetInfo[[targetCol]]
-			data[data[[valueCol]] == previousTargets[adjacentIdx, targetCol] & data[[trialCol]] == 0, targetCol] <- targetInfo[[targetCol]]
+			data[data[[valueCol]] == previousTargets[adjacentIdx, targetCol] & data[[trialCol]] == 0, valueCol] <- targetInfo[[targetCol]]
 			#assign the upper bound value to the current target in previous targets
 			previousTargets[adjacentIdx, targetCol] <- targetInfo[[targetCol]]
 			previousTargets[adjacentIdx, valueCol] <- targetInfo[[targetCol]]
 		}
 
-	#if the target is within the high and low of previousTarget[minAdjIdx],
-	#then set ptMinInTargetRange to TRUE
-		ptMinInTargetRange <-ifelse(targetInfo[[targetCol]] > previousTargets[minAdjIdx, lowCol] & targetInfo[[targetCol]] < previousTargets[minAdjIdx, highCol], TRUE, FALSE)
+	#the target and an anchor are treated as the same number when the target falls inside
+	#the anchor's range of equivalent numbers, or, for a remembered estimate, when the
+	#anchor's value falls inside the target's range. Each number therefore keeps its own
+	#resolution and the comparison does not depend on which was seen first. A reference
+	#point is always discriminable from the target, so the reverse test skips trial 0 rows.
+		ptMinInTargetRange <- (targetInfo[[targetCol]] >= previousTargets[minAdjIdx, lowCol] & targetInfo[[targetCol]] <= previousTargets[minAdjIdx, highCol]) |
+			(previousTargets[minAdjIdx, trialCol] > 0 & previousTargets[minAdjIdx, targetCol] >= targetInfo[[lowCol]] & previousTargets[minAdjIdx, targetCol] <= targetInfo[[highCol]])
 	# and do the same for the ptMaxInTargetRange
-		ptMaxInTargetRange <-ifelse(targetInfo[[targetCol]] > previousTargets[maxAdjIdx, lowCol] & targetInfo[[targetCol]] < previousTargets[maxAdjIdx, highCol], TRUE, FALSE)
+		ptMaxInTargetRange <- (targetInfo[[targetCol]] >= previousTargets[maxAdjIdx, lowCol] & targetInfo[[targetCol]] <= previousTargets[maxAdjIdx, highCol]) |
+			(previousTargets[maxAdjIdx, trialCol] > 0 & previousTargets[maxAdjIdx, targetCol] >= targetInfo[[lowCol]] & previousTargets[maxAdjIdx, targetCol] <= targetInfo[[highCol]])
 
 	#if the target is in only one previousTarget range, then set the minAdjIdx = maxAdjIdx so the estimate will be equal to that previousTarget
 		maxAdjIdx <- ifelse(ptMinInTargetRange == TRUE & ptMaxInTargetRange == FALSE, minAdjIdx, maxAdjIdx)
 		minAdjIdx <- ifelse(ptMinInTargetRange == FALSE & ptMaxInTargetRange == TRUE, maxAdjIdx, minAdjIdx)
 
-		#there can be multiple instances of a target in df.tmp
 		lowTarget <- previousTargets[minAdjIdx, ]
 		highTarget <- previousTargets[maxAdjIdx, ]
 
-		#if one of them is a conceptual or visual reference point, use that, else get the average estimate
 		eLow <- ifelse(min(lowTarget[[trialCol]]) == 0, mean(lowTarget[lowTarget[[trialCol]] == 0, estimateCol]), mean(lowTarget[[estimateCol]]))
 		eHigh <- ifelse(min(highTarget[[trialCol]]) == 0, mean(highTarget[highTarget[[trialCol]] == 0, estimateCol]), mean(highTarget[[estimateCol]]))
 
-#Make first estimate always between adjacent bounds
-		estimate <- ifelse( (trialNumber == 1) & !is.null(firstEstimate), eLow+(firstEstimate*abs(eHigh - eLow)), mean(c(eLow, eHigh)))
-#		estimate <- ifelse(!is.null(firstEstimate), eLow+(firstEstimate*abs(eHigh - eLow)), mean(c(eLow, eHigh)))
+	#when both anchors are reference points there is no remembered estimate bracketing the
+	#target, so firstEstimate sets where in the region the estimate falls. Otherwise the
+	#target is placed midway between its two anchors.
+		unanchored <- (lowTarget[[trialCol]] == 0) & (highTarget[[trialCol]] == 0)
+		estimate <- ifelse( unanchored & !is.null(firstEstimate), eLow+(firstEstimate*abs(eHigh - eLow)), mean(c(eLow, eHigh)))
 
 		#### apply influence of numberSensitivity to the target value as well
 		accuracyTargetVec <- NULL
@@ -117,13 +130,6 @@ getEstimateNL <- function(data, totalNumTargets, upperBound, lowerBound = 0, tri
 		### fill target into data
 		data[data[[trialCol]] == trialNumber, ] <- targetInfo
 
-	if(length(estimate) > 1) {
-		print(eLow)
-		print(eHigh)
-		print(estimate)
-		print(targetInfo$target)
-		print(trialNumber)
-	}
 		if(verbose) {
 			print("**** NEW ****")
 			print("**** target ****")
@@ -152,6 +158,5 @@ getEstimateNL <- function(data, totalNumTargets, upperBound, lowerBound = 0, tri
 			print(targetInfo[[estimateCol]])
 		}
 	}
-	#return(targetInfo)
 	return(data)
 }

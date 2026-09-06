@@ -10,7 +10,6 @@ ordinalNumberLine(
   lowerBound = 0,
   firstEstimate = NULL,
   memoryLength = NULL,
-  rangeLength = 1,
   accuracyPercent = 0,
   numberSensitivity = 1,
   pIncludeConceptualPoints = 0,
@@ -23,21 +22,21 @@ ordinalNumberLine(
 \arguments{
 \item{targets}{A vector of numbers that are the to-be-estimated values.}
 
-\item{upperBound}{A number that identifes the upper point beyond which the partcipant cannot respond.  This is the upperBound of the bounded number line or the upper screen edge when the unbounded number line is used. This must be specified in "number-line units."}
+\item{upperBound}{A number that identifes the upper point beyond which the partcipant cannot respond. In the bounded task this is the upper end of the number line and is also passed as a visible reference point. In the universal task it is the upper screen edge and is normally not a visible reference point. This must be specified in "number-line units."}
 
-\item{lowerBound}{A number that identifes the lower point beyond which the partcipant cannot respond.  This is the lowerBound of the bounded and unbounded number line or the lower screen edge when the universal number line is used.  DEFAULT = 0.}
+\item{lowerBound}{A number that identifes the lower point beyond which the partcipant cannot respond. In the bounded task this is the lower end of the number line and is also passed as a visible reference point. In the universal task it is the lower screen edge and is normally not a visible reference point.  DEFAULT = 0.}
 
-\item{firstEstimate}{A proportion between 0 and 1 that idenitifies the bias of the first estimated value. The firstEstimate will always fall in the region between the visible reference points (or upper and lower bound) that retain ordinality. The first estmate is a value between 0-1, where 0 specifies the lowest point in that region, 1 specifies the highest point in that region, etc. This value will influence the remaining results.  If NULL, then a random draw from between relevant region will serve as the first estimate.  DEFAULT = NULL}
+\item{firstEstimate}{A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. 0 places the estimate at the bottom of the region between the two anchors, 1 at the top. In the bounded task this is the first trial only; in the universal task it recurs for the first target in each region between labelled points, and again in any region whose estimates have dropped out of the memory window. A conceptual reference point counts as a reference point, so whether firstEstimate applies on a given trial depends on which conceptual points were drawn for that run.  If NULL, the midpoint of the region is used.  DEFAULT = NULL}
 
-\item{memoryLength}{A integer that specifies the number of previous estimates that are remembered. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). DEFAULT = legnth(targets).}
-
-\item{rangeLength}{An integer that specifies the size of the window on the vector of remembered estimates that is used to identify the bounds of the next estimate. smaller number will produce more accurate estmates.  DEFAULT = 2}
+\item{memoryLength}{An integer that specifies the number of previous estimates that are remembered. On trial t the remembered set is the estimates from trials t-memoryLength through t-1, plus every reference point. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). DEFAULT = length(targets).}
 
 \item{accuracyPercent}{A proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  DEFAULT = 0}
 
-\item{numberSensitivity}{A proportion between 0 and 1 that specifies the range of equivelance. When numberSensitivity=0, the target is not differentiated from the nearest referenece point. When numberSensitivity=1, the target is differentiated from all other targets. When 0< numberSensitivity < 1, the range of equivelence is proportional to the value. DEFAULT = 1 (perfect precision)}
+\item{numberSensitivity}{A proportion between 0 and 1 that specifies the range of equivelance. A number's range is scaled by its distance to the nearest reference point, so numbers near a landmark are discriminated finely and numbers far from one coarsely. When numberSensitivity=1, every number is discriminated from every other. When numberSensitivity=0, a number is not discriminated from anything within its distance to the nearest reference point. Two numbers are treated as the same when either one falls in the other's range; a target is compared to a reference point in one direction only, so labels stay perfectly discriminable. DEFAULT = 1 (perfect precision)}
 
-\item{visibleReferencePoints}{A vector of numbers that specify the visible (displayed) points that identify the value of positions on the number line. These are the upper and lower bound of the bounded number line, 0 and 1 for the unbounded number line, and anything the researcher uses for the universal number line or learning tasks.  Default is NULL.}
+\item{pIncludeConceptualPoints}{A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is available on a run. Each conceptual point is drawn independently, once per run, and is then present on every trial of that run. Because the drawn points enter the reference set, this probability moves the estimates through two channels: which anchors are available and how wide each target's range of equivalence is.  DEFAULT = 0}
+
+\item{visibleReferencePoints}{A vector of numbers that specify the visible (displayed) points that identify the value of positions on the number line. In the bounded task these are the upper and lower bound; in the universal task they are the labelled values and the bounds are the screen edges. This is required; there is no default.}
 
 \item{conceptualReferencePoints}{A vector of numbers that specify any conceptual points that the participant may use to identify the value of positions on the number line. These may be the middle of the bounded number-line, or a learned position on the number_line. Currently, conceptualReferencePoints are only modeled if they are used thoughout the task (not introduced part of the way through) Default is NULL.}
 
@@ -51,17 +50,20 @@ a dataframe containing the target value (target) and predicted estimate (fEst).
 }
 \description{
 Function that simulates the numberLine process and return the predited estimates.
-This function assumes that participants randomly place thier first response. Then their section response is randomly
-presented between the first response and either the upper or lower boundary (depending on whether the target is greater
-than or less than (respectively) the first target). Then, the partcipant will place the following estimates  ordinally
-in relation to the previous estimates (and the upper and lower bounds). This is moderated by the memoryLength, which
-specifies how well they remember the previous estimates (larger is better) and rangeLength, which specifies
-how close they set the bounds around the remembered items (smaller is better). Finally, accuracyPercent specifies
-the influence of accuracy on the the estimates.  This is a proportion, between 0 and 1, whereby estimate is
-calculated as follows: estimate = (estimate based on algroithm * 1-accuracyPercent) + presented target * accuracyPercent
+The participant places each target ordinally in relation to the previous estimates and the
+reference points. A target that is not bracketed by a remembered estimate is placed in the
+region between its two reference points using firstEstimate; every other target is placed
+midway between its two anchors. This is moderated by the memoryLength, which specifies how
+many of the previous estimates are remembered (larger is better), and by numberSensitivity,
+which specifies how finely numbers near a reference point are discriminated. Finally,
+accuracyPercent specifies the influence of accuracy on the estimates.  This is a proportion,
+between 0 and 1, whereby estimate is calculated as follows:
+estimate = (estimate based on algroithm * 1-accuracyPercent) + presented target * accuracyPercent
 }
 \examples{
-ordinalNumberLine (c(2,3,4, 5, 6), 100, 0, firstEstimate = 400, rangeLength = 5, accuracyPercent = 0.5)
+ordinalNumberLine(c(2, 3, 4, 5, 6), upperBound = 10, lowerBound = 0,
+                  visibleReferencePoints = c(0, 10), firstEstimate = 0.5,
+                  accuracyPercent = 0.5, targetOrder = "fixed")
 }
 \keyword{line}
 \keyword{number}

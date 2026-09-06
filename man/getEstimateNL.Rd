@@ -16,7 +16,6 @@ getEstimateNL(
   highCol = "high",
   estimateCol = "estimate",
   memoryLength = NULL,
-  rangeLength = 1,
   numberSensitivity = 1,
   accuracyPercent = 0,
   firstEstimate = NULL,
@@ -25,6 +24,8 @@ getEstimateNL(
 }
 \arguments{
 \item{data}{A dataframe with the following columns: trialNumber, targetValue, estimate. It is created in ordinalNumberline() and passed to this function.}
+
+\item{totalNumTargets}{An integer specifying the number of trials (targets) in data. The function estimates trials 1 through totalNumTargets in order.}
 
 \item{upperBound}{A number that identifes the upper point beyond which the partcipant cannot respond.  This is the upperBound of the bounded number line or the upper screen edge when the unbounded number line is used. This must be specified in "number-line units."}
 
@@ -42,20 +43,16 @@ getEstimateNL(
 
 \item{estimateCol}{A string specifying the column of data that holds the estimated values.  DEFAULT = "estimate".}
 
-\item{memoryLength}{A integer that specifies the number of previous estimates that are remembered. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). DEFAULT = legnth(targets).}
+\item{memoryLength}{An integer that specifies the number of previous estimates that are remembered. On trial t the remembered set is the estimates from trials t-memoryLength through t-1, plus every reference point. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). DEFAULT = length(targets).}
 
-\item{rangeLength}{An integer that specifies the size of the window on the vector of remembered estimates that is used to identify the bounds of the next estimate. smaller number will produce more accurate estmates.  DEFAULT = 1}
-
-\item{numberSensitivity}{A proportion between 0 and 1 that specifies the range of equivelance. When numberSensitivity=0, the target is not differentiated from the nearest referenece point. When numberSensitivity=1, the target is differentiated from all other targets. When 0< numberSensitivity < 1, the range of equivelence is proportional to the value. DEFAULT = 1 (perfect precision)}
+\item{numberSensitivity}{A proportion between 0 and 1 that specifies the range of equivelance. When numberSensitivity=0, the target is not differentiated from the nearest referenece point. When numberSensitivity=1, the target is differentiated from all other targets. When 0< numberSensitivity < 1, the range of equivelence is proportional to the distance to the nearest reference point. Two numbers are treated as equivalent when either one falls in the other's range, though a target is compared to a reference point in one direction only.  DEFAULT = 1 (perfect precision)}
 
 \item{accuracyPercent}{A proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  DEFAULT = 0}
 
-\item{firstEstimate}{A proportion between 0 and 1 that idenitifies the bias of the first estimated value. The firstEstimate will always fall in the region between the visible reference points (or upper and lower bound) that retain ordinality. The first estmate is a value between 0-1, where 0 specifies the lowest point in that region, 1 specifies the highest point in that region, etc. This value will influence the remaining results.  If NULL, then a random draw from between relevant region will serve as the first estimate.  DEFAULT = NULL}
+\item{firstEstimate}{A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. 0 places the estimate at the bottom of the region between the two anchors, 1 at the top. Because a conceptual reference point is a reference point, whether firstEstimate applies on a given trial depends on which conceptual points were included on that run.  If NULL, the midpoint of the region is used.  DEFAULT = NULL}
 
 \item{verbose}{A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.
 '}
-
-\item{trialNumber}{A number that identifes the trial number of the estimate to be made.}
 }
 \value{
 a dataframe containing the target value (target) and predicted estimate (fEst).
@@ -64,7 +61,13 @@ a dataframe containing the target value (target) and predicted estimate (fEst).
 Function simulates the numberLine process and return the predited estimate for a single trial
 }
 \examples{
-ordinalNumberLine (c(2,3,4, 5, 6), 100, 0, firstEstimate = 400, rangeLength = 5, accuracyPercent = 0.5)
+df <- data.frame(trial = c(1, 2, 0, 0),
+                 target = c(30, 70, 0, 100),
+                 low = c(30, 70, 0, 100),
+                 high = c(30, 70, 0, 100),
+                 estimate = c(NA, NA, 0, 100),
+                 targetValue = c(30, 70, 0, 100))
+getEstimateNL(df, totalNumTargets = 2, upperBound = 100, lowerBound = 0, memoryLength = 2)
 }
 \keyword{line}
 \keyword{number}

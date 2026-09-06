@@ -17,14 +17,16 @@ ordinalNumberLineFlex_mc(
 
 \item{parList}{A list containing parameter names and their values for the
 \code{ordinalNumberLine} analysis. Required elements are: \code{firstEstimate},
-\code{upperBound}, \code{lowerBound}, \code{rangeLength}, \code{memoryLength},
-\code{numberSensitivity}, \code{accuracyPercent}, \code{pIncludeConceptualPoints},
-\code{visibleReferencePoints}, \code{conceptualReferencePoints}, and \code{targetOrder}.}
+\code{upperBound}, \code{lowerBound}, \code{memoryLength}, \code{numberSensitivity},
+\code{accuracyPercent}, \code{pIncludeConceptualPoints}, \code{visibleReferencePoints},
+\code{conceptualReferencePoints}, and \code{targetOrder}.}
 
 \item{loops}{An integer specifying the number of simulation runs to perform.
 Each run can be executed in parallel, potentially speeding up the overall
 estimation process. Higher values generally lead to more stable and precise
-estimates but increase computation time. Default = 1000.}
+estimates but increase computation time. Loops are collapsed to 1 when the run
+is deterministic, that is, when the target order is fixed or drawn once and
+there is no conceptual-point inclusion draw to average over. Default = 1000.}
 
 \item{verbose}{A logical value indicating whether to print intermediate steps
 for debugging purposes. Default = FALSE.}
@@ -46,10 +48,9 @@ Parallel processing can significantly reduce computation time for a large number
   # Example with 2 cores
   my_targets <- c(2, 3, 4, 5, 6)
   my_parList <- list(
-    firstEstimate = 400,
+    firstEstimate = 0.5,
     upperBound = 100,
     lowerBound = 0,
-    rangeLength = 5,
     memoryLength = 3,
     accuracyPercent = 0.5,
     numberSensitivity = 1,

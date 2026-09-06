@@ -1,18 +1,32 @@
 Package: nlFit
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Title: Fit the Ordinal Model of Number-Line Estimation
+Version: 0.2.0
+Authors@R:
+    person("Dale J.", "Cohen",
+           email = "cohend@uncw.edu",
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0003-3353-3340"))
+Description: Simulates and fits the ordinal model of number-line estimation
+    described in Thompson and Cohen (2025) <doi:10.1037/amp0001617>. In the
+    model a participant places each target ordinally between the estimates
+    they remember and the reference points they can see, with parameters for
+    the spatial bias of an unanchored placement, the length of the memory
+    window, the resolution with which numbers near a landmark are
+    discriminated, the weight given to accurate responding, and the
+    probability that a conceptual landmark is available. Provides the
+    simulation, a fit statistic for use with a grid search, and reporting of
+    the fitted parameters and fit statistics. Handles the bounded, unbounded
+    and universal number-line tasks.
+License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Imports: 
     chutils,
     doParallel,
-    dplyr,
     foreach,
-    parallel
+    grDevices,
+    graphics,
+    parallel,
+    stats,
+    utils

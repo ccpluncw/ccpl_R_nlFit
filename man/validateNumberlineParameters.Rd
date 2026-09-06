@@ -14,10 +14,10 @@ validateNumberlineParameters(parList)
 A boolean that specifies the parameter values as valid (TRUE) or invalid (FALSE).
 }
 \description{
-Function that validates the number line parameters for the fitNL analysis
+Function that validates the number line parameters for the fitNL analysis. A searched parameter that is out of range makes the parameter set invalid (FALSE); a missing lowerBound is a structural error and stops.
 }
 \examples{
-validateNumberlineParameters (parList = list(upperBound = 100, lowerBound = 0, firstEstimate = 50))
+validateNumberlineParameters (parList = list(upperBound = 100, lowerBound = 0, firstEstimate = 0.5))
 }
 \keyword{ordinalNumberline}
 \keyword{paramters}

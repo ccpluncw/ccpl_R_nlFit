@@ -14,10 +14,10 @@ fillNumberlineParList(parList)
 The filled parameter list.
 }
 \description{
-Function that ensures that the parameter list the fitNL analysis is complete. This means that a parameter that is null is assigned the default value
+Function that ensures that the parameter list the fitNL analysis is complete. This means that a parameter that is null is assigned the default value. memoryLength is not filled here because its default is the number of targets, which is known only at simulation time; ordinalNumberLine() sets it.
 }
 \examples{
-fillNumberlineParList (parList = list(upperBound = 100, lowerBound = 0, firstEstimate = 50))
+fillNumberlineParList (parList = list(upperBound = 100, lowerBound = 0, firstEstimate = 0.5))
 }
 \keyword{fill}
 \keyword{ordinalNumberline}

@@ -10,7 +10,6 @@ getOrdinalNumberlineFit(
   lowerBound = 0,
   firstEstimate = NULL,
   memoryLength = NULL,
-  rangeLength = 2,
   accuracyPercent = 0,
   numberSensitivity = 1,
   pIncludeConceptualPoints = 0,
@@ -21,7 +20,7 @@ getOrdinalNumberlineFit(
   dataTargetCol = "target",
   dataEstimateCol = "estimate",
   minimizeStat = "BIC",
-  pars.n = NULL,
+  pars.n,
   verbose = FALSE,
   multicore = FALSE
 )
@@ -29,21 +28,21 @@ getOrdinalNumberlineFit(
 \arguments{
 \item{data}{This is a dataframe that must contain the following columns: target; estimate. The dataset can also contain columns that effect code the influence of different parameters (to be implemented).}
 
-\item{upperBound}{A number that is the upper bound of the numberLine.}
+\item{upperBound}{A number that identifes the upper point beyond which the partcipant cannot respond. In the bounded task this is the upper end of the number line and is also passed as a visible reference point. In the universal task it is the upper screen edge.}
 
-\item{lowerBound}{A number that is the lower bound of the numberLine. DEFAULT = 0.}
+\item{lowerBound}{A number that identifes the lower point beyond which the partcipant cannot respond. In the bounded task this is the lower end of the number line and is also passed as a visible reference point. In the universal task it is the lower screen edge. DEFAULT = 0.}
 
-\item{firstEstimate}{A proportion between 0 and 1 that idenitifies the bias of the first estimated value. The firstEstimate will always fall in the region between the visible reference points (or upper and lower bound) that retain ordinality. The first estmate is a value between 0-1, where 0 specifies the lowest point in that region, 1 specifies the highest point in that region, etc. This value will influence the remaining results.  If NULL, then a random draw from between relevant region will serve as the first estimate.  DEFAULT = NULL}
+\item{firstEstimate}{A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. 0 places the estimate at the bottom of the region between the two anchors, 1 at the top.  If NULL, the midpoint of the region is used.  DEFAULT = NULL}
 
-\item{memoryLength}{A integer that specifies the number of previous estimates that are remembered. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). DEFAULT = legnth(targets).}
-
-\item{rangeLength}{An integer that specifies the size of the window on the vector of remembered estimates that is used to identify the bounds of the next estimate. smaller number will produce more accurate estmates.  DEFAULT = 2}
+\item{memoryLength}{An integer that specifies the number of previous estimates that are remembered. On trial t the remembered set is the estimates from trials t-memoryLength through t-1, plus every reference point. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). DEFAULT = length(targets).}
 
 \item{accuracyPercent}{a proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  DEFAULT = 0}
 
-\item{numberSensitivity}{A proportion between 0 and 1 that specifies the range of equivelance. When numberSensitivity=0, the target is not differentiated from the nearest referenece point. When numberSensitivity=1, the target is differentiated from all other targets. When 0< numberSensitivity < 1, the range of equivelence is proportional to the value. DEFAULT = 1 (perfect precision)}
+\item{numberSensitivity}{A proportion between 0 and 1 that specifies the range of equivelance. A number's range is scaled by its distance to the nearest reference point. When numberSensitivity=1, every number is discriminated from every other. When numberSensitivity=0, a number is not discriminated from anything within its distance to the nearest reference point. DEFAULT = 1 (perfect precision)}
 
-\item{visibleReferencePoints}{A vector of numbers that specify the visible (displayed) points that identify the value of positions on the number line. These are the upper and lower bound of the bounded number line, 0 and 1 for the unbounded number line, and anything the researcher uses for the universal number line or learning tasks.  Default is NULL.}
+\item{pIncludeConceptualPoints}{A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is available on a run. Each conceptual point is drawn independently, once per run.  DEFAULT = 0}
+
+\item{visibleReferencePoints}{A vector of numbers that specify the visible (displayed) points that identify the value of positions on the number line. In the bounded task these are the upper and lower bound; in the universal task they are the labelled values and the bounds are the screen edges. This is required; there is no default.}
 
 \item{conceptualReferencePoints}{A vector of numbers that specify any conceptual points that the participant may use to identify the value of positions on the number line. These may be the middle of the bounded number-line, or a learned position on the number_line. Currently, conceptualReferencePoints are only modeled if they are used thoughout the task (not introduced part of the way through) Default is NULL.}
 
@@ -57,7 +56,7 @@ getOrdinalNumberlineFit(
 
 \item{minimizeStat}{A string that specifies which statistic to minimize when optimizing the model fit.  The options are: "BIC" , "AIC" , or "R_Square". Default is "BIC".}
 
-\item{pars.n}{The number of free parameters. When NULL, the program will attempt to calculate the number of free parameters from the input. Default = NULL.}
+\item{pars.n}{The number of free parameters, that is, the number of parameters the search varies. This is required; there is no default.}
 
 \item{verbose}{A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.}
 
@@ -71,7 +70,11 @@ The minimization statistic for the fit of the model to the data.  This is the va
 Function that fits fits the ordinalNumberLine and returns a fit statistic
 }
 \examples{
-getOrdinalNumberlineFit (data, parList = list(upperBound = 100, lowerBound = 0, firstEstimate = 50))
+df <- data.frame(target = c(10, 30, 50, 70, 90), estimate = c(20, 35, 48, 66, 88))
+getOrdinalNumberlineFit(df, upperBound = 100, lowerBound = 0,
+                        visibleReferencePoints = c(0, 100),
+                        firstEstimate = 0.5, numberSensitivity = 0.8,
+                        accuracyPercent = 0.2, loops = 10, pars.n = 3)
 }
 \keyword{number-line}
 \keyword{ordinal}
