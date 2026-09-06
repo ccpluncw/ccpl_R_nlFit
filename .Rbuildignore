@@ -3,3 +3,6 @@
 ^\.Rproj\.user$
 ^.*\.Rcheck$
 ^LICENSE$
+^doc$
+^Meta$
+^vignettes/gridLogs$

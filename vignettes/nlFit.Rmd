@@ -1,0 +1,382 @@
+---
+title: "The ordinal number-line model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{The ordinal number-line model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
+                      fig.width = 6, fig.height = 4.2, dpi = 96)
+library(nlFit)
+haveSGS <- requireNamespace("smartGridSearch2", quietly = TRUE)
+```
+
+## What the model does
+
+The model simulates the estimation process one trial at a time. It does not
+describe the shape of a participant's estimates. It produces the estimates, and
+the shape is whatever comes out. Two processes act on every trial. The ordinal
+process places the target between the two remembered numbers that bracket it and
+uses rank alone, never distance. The linear process places the target at its own
+value on the line. The response is a weighted average of the two placements, and
+`accuracyPercent` is the weight on the linear process. Thompson and Cohen (2025,
+*American Psychologist*, doi:10.1037/amp0001617) introduce the model and the
+data it was built on.
+
+The fitted parameters describe a participant, not a curve. They say where the
+participant puts a number when nothing remembered brackets it, how many of the
+participant's own earlier estimates are still available to anchor the next one,
+how finely the participant separates two numbers near a landmark, and how much
+weight the participant gives to responding accurately.
+
+## Terms
+
+A **visible reference point** is a labelled position the participant can see.
+Pass these as `visibleReferencePoints`. They are required. A **conceptual
+reference point** is a position the participant supplies without seeing it, such
+as the middle of the line. Pass these as `conceptualReferencePoints`, and give
+the probability that one is available on a run as `pIncludeConceptualPoints`. A
+**remembered estimate** is an estimate the participant made earlier in the same
+run. It anchors later targets, but it is not a reference point. The distinction
+matters in one place. A reference point is always discriminable from the target.
+A remembered estimate may not be. The **bounds**, `lowerBound` and `upperBound`,
+are the ends of the region the participant can respond in. No estimate is placed
+outside them.
+
+Two tasks use these arguments differently. In the bounded task the ends of the
+line are labelled, so the bounds are also the visible reference points and the
+same two numbers are passed twice. In the universal task the visible reference
+points are the labelled values and the bounds are the edges of the screen.
+
+## One run, one parameter at a time
+
+The worked example is a universal number line. The screen runs from 0 to 100 and
+carries two labels, 5 and 50. `targetOrder = "fixed"` takes the targets in the
+order given, so each trial can be followed in turn.
+
+```{r setup-line}
+nl <- function(targets, ...) {
+  ordinalNumberLine(targets = targets, upperBound = 100, lowerBound = 0,
+                    visibleReferencePoints = c(5, 50),
+                    targetOrder = "fixed", ...)
+}
+```
+
+### The first estimate
+
+Trial 1 presents 15. Nothing has been estimated yet, so the two anchors are the
+label 5 and the label 50, and both are reference points. `firstEstimate` is the
+proportion of that region at which the estimate lands. The value 15 plays no part
+in the placement. Only the linear process knows the number.
+
+The rule is not confined to trial 1. It applies whenever both anchors are
+reference points, which happens again on trial 3. Target 60 lies above every
+label, so it is bracketed by the label 50 and the upper screen edge, and it lands
+at the same proportion of that region.
+
+```{r first-estimate}
+targets4 <- c(15, 6, 60, 10)
+f.low  <- nl(targets4, firstEstimate = 0.2)
+f.mid  <- nl(targets4, firstEstimate = 0.5)
+f.high <- nl(targets4, firstEstimate = 0.8)
+data.frame(trial = 1:4, target = targets4,
+           f.0.2 = f.low$fEst, f.0.5 = f.mid$fEst, f.0.8 = f.high$fEst)
+```
+
+At `firstEstimate = 0.2` trial 1 puts 15 at `r f.low$fEst[1]`, which is one fifth
+of the way from 5 to 50. At 0.8 it puts 15 at `r f.high$fEst[1]`. Trial 3 moves
+with it, from `r f.low$fEst[3]` to `r f.high$fEst[3]`.
+
+```{r first-estimate-plot, echo = FALSE}
+plot(targets4, f.mid$fEst, type = "n", xlim = c(0, 100), ylim = c(0, 100),
+     xlab = "target", ylab = "estimate")
+abline(0, 1, col = "grey70")
+abline(v = c(5, 50), col = "grey85")
+points(targets4, f.low$fEst,  pch = 1)
+points(targets4, f.mid$fEst,  pch = 16)
+points(targets4, f.high$fEst, pch = 2)
+legend("topleft", c("0.2", "0.5", "0.8"), pch = c(1, 16, 2),
+       title = "firstEstimate", bty = "n")
+```
+
+### Ordinality and the memory window
+
+Trial 2 presents 6. The remembered numbers are the labels 5 and 50, the screen
+edges, and the estimate given to 15. Only the rank matters, so 6 falls between
+the label 5 and the remembered 15, and it lands midway between the position of
+the label and the position given to 15. Trial 4 presents 10, which falls between
+the remembered 6 and the remembered 15 and lands midway between their estimates.
+Every anchored target lands midway between its two anchors, so an error made
+early is carried forward.
+
+`memoryLength` is the number of previous estimates still available. With
+`memoryLength = 1` only the estimate from the previous trial is remembered.
+
+```{r memory}
+m.full  <- nl(targets4, firstEstimate = 0.5, memoryLength = 4)
+m.short <- nl(targets4, firstEstimate = 0.5, memoryLength = 1)
+data.frame(trial = 1:4, target = targets4,
+           memory.4 = m.full$fEst, memory.1 = m.short$fEst)
+```
+
+The first three trials are the same. On trial 4 the short window holds only the
+estimate of 60, so nothing remembered brackets 10, both anchors are labels again,
+and the first-estimate rule fires. Target 10 is placed at `r m.short$fEst[4]`, the
+same place 15 was placed. A memory window shorter than the target set turns the
+fitted function into a staircase.
+
+```{r memory-plot, echo = FALSE}
+plot(targets4, m.full$fEst, type = "n", xlim = c(0, 100), ylim = c(0, 100),
+     xlab = "target", ylab = "estimate")
+abline(0, 1, col = "grey70")
+abline(v = c(5, 50), col = "grey85")
+points(targets4, m.full$fEst,  pch = 16)
+points(targets4, m.short$fEst, pch = 1)
+legend("topleft", c("4", "1"), pch = c(16, 1), title = "memoryLength", bty = "n")
+```
+
+### Number sensitivity
+
+Every number carries a range of equivalent numbers. The half width of that range
+is `(1 - numberSensitivity)` times the distance to the nearest reference point.
+Target 15 is 10 away from the label 5, so at `numberSensitivity = 0.8` its range
+runs from 13 to 17. A later 14 falls inside that range and is treated as the same
+number as 15. It is placed where 15 was placed, and the linear process aims at 15
+rather than at 14.
+
+```{r sensitivity}
+s.fine   <- nl(c(15, 14), firstEstimate = 0.5, numberSensitivity = 1)
+s.coarse <- nl(c(15, 14), firstEstimate = 0.5, numberSensitivity = 0.8)
+data.frame(trial = 1:2, target = c(15, 14),
+           s.1 = s.fine$fEst, s.0.8 = s.coarse$fEst)
+```
+
+At `numberSensitivity = 1` every range has zero width, and 14 gets its own
+placement of `r s.fine$fEst[2]`. At 0.8 it takes 15's estimate of
+`r s.coarse$fEst[2]`.
+
+The test runs in both directions, so the pair collapses whichever number came
+first.
+
+```{r sensitivity-order}
+nl(c(14, 15), firstEstimate = 0.5, numberSensitivity = 0.8)$fEst
+```
+
+Because the half width is scaled by the distance to the nearest reference point,
+resolution is finest next to a label and coarsest midway between two labels.
+
+```{r sensitivity-plot, echo = FALSE}
+grid <- seq(0, 100, by = 0.5)
+half <- 0.2 * pmin(abs(grid - 5), abs(grid - 50))
+plot(grid, half, type = "l", xlab = "target",
+     ylab = "half width of the range at s = 0.8")
+abline(v = c(5, 50), col = "grey85")
+```
+
+### Accuracy
+
+`accuracyPercent` is the weight the response gives to the linear process. At 0
+the response is the ordinal placement. At 1 it is the value the linear process
+aims at. Below is the same pair of trials at
+`numberSensitivity = 0.8` and three weights.
+
+```{r accuracy}
+acc <- lapply(c(0, 0.5, 1), function(a) {
+  nl(c(15, 14), firstEstimate = 0.5, numberSensitivity = 0.8, accuracyPercent = a)
+})
+data.frame(target = c(15, 14), a.0 = acc[[1]]$fEst,
+           a.0.5 = acc[[2]]$fEst, a.1 = acc[[3]]$fEst)
+```
+
+Target 14 moves from `r acc[[1]]$fEst[2]` to `r acc[[3]]$fEst[2]` as the weight
+rises. At full weight the estimate of 14 is `r acc[[3]]$fEst[2]`, not 14, because
+sensitivity has already merged the two numbers and the linear process aims at the
+number the participant thinks was presented.
+
+```{r accuracy-plot, echo = FALSE}
+est14 <- sapply(acc, function(x) x$fEst[2])
+plot(NA, xlim = c(0, 50), ylim = c(0, 1), yaxt = "n", ylab = "",
+     xlab = "position on the line")
+abline(h = 0.5, col = "grey70")
+points(c(5, 50), c(0.5, 0.5), pch = "|", cex = 1.6)
+text(c(5, 50), 0.62, c("label 5", "label 50"), cex = 0.8)
+points(est14, rep(0.5, 3), pch = 3, cex = 1.4)
+text(est14, 0.38, paste("a =", c(0, 0.5, 1)), cex = 0.8)
+```
+
+### Conceptual reference points
+
+A conceptual reference point is a reference point the participant may or may not
+have on a given run. Each one is drawn independently once per run and is then
+present on every trial of that run. `pIncludeConceptualPoints` is the probability
+of that draw. Here the participant may hold a conceptual point at 25.
+
+```{r conceptual}
+c.out <- nl(targets4, firstEstimate = 0.5,
+            conceptualReferencePoints = 25, pIncludeConceptualPoints = 0)
+c.in  <- nl(targets4, firstEstimate = 0.5,
+            conceptualReferencePoints = 25, pIncludeConceptualPoints = 1)
+data.frame(target = targets4, p.0 = c.out$fEst, p.1 = c.in$fEst)
+```
+
+The point moves the estimates two ways. It is an anchor, so it splits the region
+between 5 and 50 in two, and it is a reference point, so it narrows the range of
+equivalent numbers for every target near it.
+
+```{r conceptual-plot, echo = FALSE}
+plot(targets4, c.out$fEst, type = "n", xlim = c(0, 100), ylim = c(0, 100),
+     xlab = "target", ylab = "estimate")
+abline(0, 1, col = "grey70")
+abline(v = c(5, 50), col = "grey85")
+abline(v = 25, col = "grey85", lty = 2)
+points(targets4, c.out$fEst, pch = 1)
+points(targets4, c.in$fEst,  pch = 16)
+legend("topleft", c("0", "1"), pch = c(1, 16),
+       title = "pIncludeConceptualPoints", bty = "n")
+```
+
+## Many runs
+
+A participant sees the targets in an order the experimenter drew, and the model's
+estimates depend on that order. `ordinalNumberLineSim()` runs the simulation
+`loops` times, draws a fresh order on each run when `targetOrder = "random"`, and
+returns the mean estimate. That mean is `fEst`, and it is the model's prediction
+for a target. It is what a fit is scored against.
+
+```{r sim}
+set.seed(11)
+parList <- list(upperBound = 100, lowerBound = 0,
+                visibleReferencePoints = c(5, 50), firstEstimate = 0.5,
+                accuracyPercent = 0.3, numberSensitivity = 0.8,
+                targetOrder = "random")
+ordinalNumberLineSim(c(6, 10, 15, 30, 45, 60, 15), parList, loops = 200)
+```
+
+Target 15 was presented twice, so it has two rows. `presentation` numbers the
+occurrences of a target value in the order they were presented. The averaging is
+by target value and presentation together. The first presentation of a value sits
+earlier in a run on average than the second, so the two have different expected
+estimates even under a random order. `loops` sets how many runs are averaged.
+More loops give a more precise `fEst` and cost more time.
+
+## Fitting a participant
+
+A participant is a set of targets and the estimates they gave. Below is one
+simulated from the model at known parameters with normal noise added, so the fit
+can be checked against the truth.
+
+```{r participant}
+truth <- list(upperBound = 100, lowerBound = 0,
+              visibleReferencePoints = c(5, 50), firstEstimate = 0.35,
+              accuracyPercent = 0.45, numberSensitivity = 0.75,
+              targetOrder = "random")
+set.seed(2)
+sim <- ordinalNumberLineSim(c(3, 6, 8, 10, 13, 15, 18, 22, 26, 30,
+                              38, 45, 55, 62, 70, 80, 90),
+                            truth, loops = 500)
+noisy <- sim$fEst + rnorm(nrow(sim), 0, 3)
+person <- data.frame(target = sim$target,
+                     estimate = round(pmin(pmax(noisy, 0), 100), 1))
+head(person)
+```
+
+`getOrdinalNumberlineFit()` runs the simulation at one set of parameters and
+returns a single number, the statistic named by `minimizeStat`. That is the
+objective a grid search minimizes. `pars.n` is required and must be the number of
+parameters the search varies, here three.
+
+```{r objective}
+getOrdinalNumberlineFit(person, upperBound = 100, lowerBound = 0,
+                        visibleReferencePoints = c(5, 50),
+                        firstEstimate = 0.35, accuracyPercent = 0.45,
+                        numberSensitivity = 0.75, loops = 60, pars.n = 3)
+```
+
+The search itself is `smartGridSearch()`. It is in the smartGridSearch2 package,
+which is not on CRAN. When that package is not installed the next chunk is not
+run and the parameter values below are the ones it returns here. The settings are
+small so the vignette builds quickly. A real fit uses more loops in the objective
+and more rounds in the search.
+
+```{r fit-search, eval = haveSGS, results = "hide", message = FALSE}
+set.seed(7)
+search <- smartGridSearch2::smartGridSearch(
+  fn = getOrdinalNumberlineFit,
+  parsUpper  = list(firstEstimate = 1, accuracyPercent = 1, numberSensitivity = 1),
+  parsLower  = list(firstEstimate = 0, accuracyPercent = 0, numberSensitivity = 0.5),
+  parsMinInt = list(firstEstimate = 0.05, accuracyPercent = 0.05,
+                    numberSensitivity = 0.05),
+  otherParamList = list(data = person, upperBound = 100, lowerBound = 0,
+                        visibleReferencePoints = c(5, 50), loops = 60,
+                        targetOrder = "random", minimizeStat = "BIC",
+                        pars.n = 3),
+  numLoops = 35, numIntervals = 12, optParamListN = 6, optBoundLoops = 3)
+best <- search$final
+```
+
+```{r fit-fallback, eval = !haveSGS, echo = FALSE}
+best <- list(firstEstimate = 0.3, accuracyPercent = 0.45, numberSensitivity = 0.75)
+```
+
+```{r fit-best}
+unlist(best[c("firstEstimate", "accuracyPercent", "numberSensitivity")])
+```
+
+`outputNLfitStats()` takes the fitted parameters, runs the simulation once more,
+and returns the fit. The result holds the fit statistics in `runStats` and the
+data with the fitted values attached in `df.fitted`. The function writes nothing
+unless it is given a file name. Pass `sinkFilename` to write a header recording
+the package version, the run, the number-line settings and the parameter values,
+and pass `plotFileName` to write the plot to a pdf.
+
+```{r stats}
+statList <- list(upperBound = 100, lowerBound = 0,
+                 visibleReferencePoints = c(5, 50),
+                 firstEstimate = best$firstEstimate,
+                 accuracyPercent = best$accuracyPercent,
+                 numberSensitivity = best$numberSensitivity,
+                 targetOrder = "random")
+out <- outputNLfitStats(person, statList, pars.n = 3, loops = 200, seed = 7)
+unlist(out$runStats$fitStats)
+head(out$df.fitted)
+```
+
+The search recovered `firstEstimate` at `r best$firstEstimate` against a true
+`r truth$firstEstimate`, `accuracyPercent` at `r best$accuracyPercent` against a
+true `r truth$accuracyPercent`, and `numberSensitivity` at
+`r best$numberSensitivity` against a true `r truth$numberSensitivity`. Over the
+`r nrow(out$df.fitted)` targets the fit has an r squared of
+`r out$runStats$fitStats$r2` and a BIC of `r out$runStats$fitStats$BIC`. This
+participant was generated by the model, so a real fit will not be this good. Plot
+`df.fitted` to see it.
+
+```{r stats-plot, fig.width = 5, fig.height = 5}
+plot(estimate ~ target, data = out$df.fitted, xlim = c(0, 100), ylim = c(0, 100))
+lines(fEst ~ target, data = out$df.fitted, col = "blue")
+abline(0, 1, col = "grey70")
+```
+
+The participant sits above the identity line at the low end and below it at the
+high end, which is what an ordinal placement between two labels produces.
+
+Data can also be given one row per trial. Add a `presentation` column numbering
+the occurrences of each target value, and the fit is matched to the simulation
+trial by trial rather than target by target. A trial-level fit has more data
+points per participant at the same `pars.n`, so its BIC is on a different scale.
+Do not compare it with the BIC of a fit to averaged data.
+
+## What changes across versions
+
+Parameters keep their meaning. A future release will not redefine
+`numberSensitivity` or `firstEstimate`, and an analysis run under a later version
+will read the same way. Extensions arrive as new arguments whose defaults
+reproduce the behaviour described here. Changes that do move the predictions are
+listed in `NEWS.md`, and the version behind the published fits is kept under a
+git tag.
+
+## Acknowledgments
+
+*This document was drafted with assistance from Claude (Anthropic). All technical content reflects the authors' design decisions and domain expertise.*

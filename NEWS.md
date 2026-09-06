@@ -71,6 +71,12 @@ existing parameter.
   and the fit is exactly what it was. A trial-level fit has more data points per
   participant at the same `pars.n`, so its BIC and AIC are not comparable with
   those of an averaged fit.
+* `outputNLfitStats()` is silent unless it is given a file name. With no
+  `plotFileName` it opens no graphics device and draws nothing, so a run inside a
+  script no longer leaves an `Rplots.pdf` behind, and with no `sinkFilename` it
+  prints nothing. The fit statistics are in the returned `runStats` either way,
+  and `df.fitted` carries the fitted values for anyone who wants to plot them.
+  Behaviour with the file names given is unchanged.
 * Hygiene: the bound-order check in `validateNumberlineParameters()` now runs,
   with an absent `lowerBound` taken as 0, which is its default everywhere else in
   the package. Debugging prints are gone.

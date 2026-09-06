@@ -8,14 +8,14 @@
 #' @param dataPresentationCol A string that identifies the name of the column in data that numbers the occurrences of a repeated target value, counted in the order they were presented. When data has that column the simulation is matched to the data trial by trial, on target and presentation. When it does not, the simulated estimates are averaged over the presentations of each value and matched on target alone, which is what an averaged dataset needs. The default is "presentation".
 #' @param pars.n The number of free parameters, that is, the number of parameters the search varied. This is required; there is no default.
 #' @param loops A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution.  Default is 1000.
-#' @param sinkFilename A string that identifies the name of file (.txt) in which the fit statistics will be saved. The default is NULL, whereby the fit statistics are written to the console.
+#' @param sinkFilename A string that identifies the name of file (.txt) in which the fit statistics will be saved. The default is NULL, whereby the statistics are not written anywhere. The same numbers are always returned in the runStats element of the result.
 #' @param appendSinkFile A boolean to specify whether the new data should be appended to the output file (TRUE) or write over the output file (FALSE). Default = TRUE
-#' @param plotFileName A string that identifies the name of file (.pdf) in which the data plot will be saved. The default is NULL, whereby the plot is drawn on the current graphics device.
+#' @param plotFileName A string that identifies the name of file (.pdf) in which the data plot will be saved. The default is NULL, whereby no plot is drawn and no graphics device is opened. Plot the returned df.fitted to draw it yourself.
 #' @param xlim A vector of two numbers giving the x axis limits of the plot. When NULL, the limits span the bounds and the targets in data. Default is NULL.
 #' @param ylim A vector of two numbers giving the y axis limits of the plot. When NULL, the limits span the bounds, the estimates in data, and the fitted estimates. Default is NULL.
 #' @param seed The random seed the caller set before running the fit. It is recorded in the output header so a run can be reproduced. The function does not set the seed itself. Default is NULL, whereby no seed is reported.
 #''
-#' @return The function returns a list containing (1) a list of the parameter values and fit statistics (`runStats`), and (2) a dataframe (`df.fitted`) that contains the "data" plus the fitted values from the model (fEst))
+#' @return The function returns a list containing (1) a list of the parameter values and fit statistics (`runStats`), and (2) a dataframe (`df.fitted`) that contains the "data" plus the fitted values from the model (fEst)). The function is silent unless it is given a file name: with no plotFileName it draws nothing, and with no sinkFilename it prints nothing.
 #' @keywords ordinalNumberline fit statistics
 #' @export
 #' @importFrom grDevices pdf dev.off
@@ -56,18 +56,24 @@ outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstim
 	if(is.null(xlim)) xlim <- c(min(statList$lowerBound, data[[dataTargetCol]]), max(statList$upperBound, data[[dataTargetCol]]))
 	if(is.null(ylim)) ylim <- c(min(statList$lowerBound, data[[dataEstimateCol]], df.fitted$fEst), max(statList$upperBound, data[[dataEstimateCol]], df.fitted$fEst))
 
-	#without a file name the plot belongs on whatever device the caller already has open
-	if(!is.null(plotFileName)) pdf(plotFileName)
+	#the plot is drawn only when there is a file to put it in. Without one the
+	#function opens no device and draws nothing, so a run in a script leaves no
+	#stray graphics file behind; the caller has df.fitted and can plot it.
+	if(!is.null(plotFileName)) {
+		pdf(plotFileName)
 		plot(data[[dataEstimateCol]] ~ data[[dataTargetCol]], ylim = ylim, xlim = xlim)
 		with(df.fitted, lines(fEst ~ target, col = "blue"))
 		text( (0.7*xlim[2]), (0.15*ylim[2]), paste("r2 =", fit.r2, "BIC =", fit.BIC))
 		abline(0,1)
 		cat("\nr2 =", fit.r2 , "; BIC =", fit.BIC, "\n\n")
-	if(!is.null(plotFileName)) dev.off()
+		dev.off()
+	}
 
-	#without a file name the statistics go to the console; sink(NULL) would otherwise
-	#close a connection the caller opened.
-  if(!is.null(sinkFilename)) sink(sinkFilename, append = appendSinkFile)
+	#the statistics are written only when there is a file to write them to, so the
+	#function returns quietly otherwise; the same numbers are in the returned list.
+	#sink(NULL) would also close a connection the caller opened.
+  if(!is.null(sinkFilename)) {
+    sink(sinkFilename, append = appendSinkFile)
     cat("\n\n **************** nlFit Statistics **************** \n\n")
 
     cat("nlFit version = ", as.character(packageVersion("nlFit")), "\n\n")
@@ -102,7 +108,8 @@ outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstim
     cat(" BIC = ", fit.BIC, "\n")
     cat(" AIC = ", fit.AIC, "\n")
 
-  if(!is.null(sinkFilename)) sink(NULL)
+    sink(NULL)
+  }
 
 
   fitStats <- list(AIC = fit.AIC, BIC = fit.BIC, r2 = fit.r2, freeParameters = pars.n)

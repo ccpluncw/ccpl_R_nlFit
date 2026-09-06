@@ -33,11 +33,11 @@ outputNLfitStats(
 
 \item{loops}{A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution.  Default is 1000.}
 
-\item{sinkFilename}{A string that identifies the name of file (.txt) in which the fit statistics will be saved. The default is NULL, whereby the fit statistics are written to the console.}
+\item{sinkFilename}{A string that identifies the name of file (.txt) in which the fit statistics will be saved. The default is NULL, whereby the statistics are not written anywhere. The same numbers are always returned in the runStats element of the result.}
 
 \item{appendSinkFile}{A boolean to specify whether the new data should be appended to the output file (TRUE) or write over the output file (FALSE). Default = TRUE}
 
-\item{plotFileName}{A string that identifies the name of file (.pdf) in which the data plot will be saved. The default is NULL, whereby the plot is drawn on the current graphics device.}
+\item{plotFileName}{A string that identifies the name of file (.pdf) in which the data plot will be saved. The default is NULL, whereby no plot is drawn and no graphics device is opened. Plot the returned df.fitted to draw it yourself.}
 
 \item{xlim}{A vector of two numbers giving the x axis limits of the plot. When NULL, the limits span the bounds and the targets in data. Default is NULL.}
 
@@ -49,7 +49,7 @@ outputNLfitStats(
 \item{dataPresentationCol}{A string that identifies the name of the column in data that numbers the occurrences of a repeated target value, counted in the order they were presented. When data has that column the simulation is matched to the data trial by trial, on target and presentation. When it does not, the simulated estimates are averaged over the presentations of each value and matched on target alone, which is what an averaged dataset needs. The default is "presentation".}
 }
 \value{
-The function returns a list containing (1) a list of the parameter values and fit statistics (\code{runStats}), and (2) a dataframe (\code{df.fitted}) that contains the "data" plus the fitted values from the model (fEst))
+The function returns a list containing (1) a list of the parameter values and fit statistics (\code{runStats}), and (2) a dataframe (\code{df.fitted}) that contains the "data" plus the fitted values from the model (fEst)). The function is silent unless it is given a file name: with no plotFileName it draws nothing, and with no sinkFilename it prints nothing.
 }
 \description{
 Function that outputs the results of the fitNL analysis
