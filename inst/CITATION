@@ -1,0 +1,14 @@
+citHeader("To cite nlFit in a publication, please cite the paper that introduces the nlFit model:")
+
+bibentry(
+  bibtype = "Article",
+  title   = "A new model explaining number-line estimation performance across development: An adversarial collaboration",
+  author  = c(person("Clarissa A.", "Thompson"),
+              person("Dale J.", "Cohen")),
+  journal = "American Psychologist",
+  year    = "2025",
+  volume  = "80",
+  number  = "9",
+  pages   = "1473--1492",
+  doi     = "10.1037/amp0001617"
+)
