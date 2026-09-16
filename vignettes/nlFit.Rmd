@@ -283,10 +283,67 @@ person <- data.frame(target = sim$target,
 head(person)
 ```
 
+`nlFit()` fits the model to one participant in a single call. `free` names the
+parameters the search varies; every other parameter is held at the value given
+through its own argument, so the line that runs a fit is also the record of what
+was fitted and what was not. A parameter named in `free` is searched over its
+whole domain, or over a range given as `free = list(numberSensitivity = c(0.5, 1))`.
+A range may narrow a domain but not widen it.
+
+The search is `smartGridSearch()`, which is in the smartGridSearch2 package and
+is not on CRAN. `nlFit()` stops with the install line when it is missing, and the
+chunks below are not run when it is missing here. `search = "quick"` and the small
+`control` settings keep this vignette fast. A reported fit uses `search = "full"`,
+which is the default, and its estimates are finer than the ones below.
+
+```{r nlfit, eval = haveSGS, results = "hide", message = FALSE}
+fit <- nlFit(person, upperBound = 100, lowerBound = 0,
+             visibleReferencePoints = c(5, 50),
+             free = c("firstEstimate", "accuracyPercent", "numberSensitivity"),
+             search = "quick",
+             control = list(multicore = FALSE, numLoops = 30, numIntervals = 12,
+                            optParamListN = 5, optBoundLoops = 2,
+                            loops = 40, finalLoops = 100))
+```
+
+Printing the fit gives the version it was made under, the parameters, which of
+them were searched and over what range, and the fit statistics.
+
+```{r nlfit-print, eval = haveSGS}
+fit
+```
+
+Plotting it draws the participant's estimates against the targets, the identity
+line, the visible reference points, and the fitted estimates.
+
+```{r nlfit-plot, eval = haveSGS, fig.width = 5, fig.height = 5}
+plot(fit)
+```
+
+The participant sits above the identity line at the low end and below it at the
+high end, which is what an ordinal placement between two labels produces. The
+values the search returns are not the values this participant was generated at.
+The parameters trade off against one another, so on noisy estimates several sets
+fit about equally well and the search returns the one that scores best, which
+need not be the one the data came from.
+
+`as.data.frame()` reduces the fit to one row: the five parameters and the fit
+statistics.
+
+```{r nlfit-row, eval = haveSGS}
+as.data.frame(fit)
+```
+
+`nlFit()` writes nothing unless it is given a file name. Pass `sinkFilename` to
+write a report recording the package version, the run, the number-line settings,
+the parameter values and the fit, and `plotFileName` to write the plot to a pdf.
+
+### What the search minimizes
+
 `getOrdinalNumberlineFit()` runs the simulation at one set of parameters and
 returns a single number, the statistic named by `minimizeStat`. That is the
-objective a grid search minimizes. `pars.n` is required and must be the number of
-parameters the search varies, here three.
+objective `nlFit()` hands to the search, and it can be called on its own.
+`pars.n` is the number of parameters the search varies, here three.
 
 ```{r objective}
 getOrdinalNumberlineFit(person, upperBound = 100, lowerBound = 0,
@@ -295,78 +352,37 @@ getOrdinalNumberlineFit(person, upperBound = 100, lowerBound = 0,
                         numberSensitivity = 0.75, loops = 60, pars.n = 3)
 ```
 
-The search itself is `smartGridSearch()`. It is in the smartGridSearch2 package,
-which is not on CRAN. When that package is not installed the next chunk is not
-run and the parameter values below are the ones it returns here. The settings are
-small so the vignette builds quickly. A real fit uses more loops in the objective
-and more rounds in the search.
+`outputNLfitStats()` is the other end of the same sequence: it recomputes the fit
+at one set of parameters and returns the fit statistics and the data with the
+fitted values attached. `nlFit()` calls it at the best parameters the search
+found, and the result is in the `fitted` element of the fitted object.
 
-```{r fit-search, eval = haveSGS, results = "hide", message = FALSE}
-set.seed(7)
-search <- smartGridSearch2::smartGridSearch(
-  fn = getOrdinalNumberlineFit,
-  parsUpper  = list(firstEstimate = 1, accuracyPercent = 1, numberSensitivity = 1),
-  parsLower  = list(firstEstimate = 0, accuracyPercent = 0, numberSensitivity = 0.5),
-  parsMinInt = list(firstEstimate = 0.05, accuracyPercent = 0.05,
-                    numberSensitivity = 0.05),
-  otherParamList = list(data = person, upperBound = 100, lowerBound = 0,
-                        visibleReferencePoints = c(5, 50), loops = 60,
-                        targetOrder = "random", minimizeStat = "BIC",
-                        pars.n = 3),
-  numLoops = 35, numIntervals = 12, optParamListN = 6, optBoundLoops = 3)
-best <- search$final
+### Many participants
+
+Fit one participant per call. Split the data by participant, fit each one, and
+stack the one-row results.
+
+```{r many, eval = FALSE}
+fits <- lapply(split(allData, allData$participant), function(p) {
+  nlFit(p, upperBound = 100, lowerBound = 0, visibleReferencePoints = c(5, 50))
+})
+do.call(rbind, lapply(fits, as.data.frame))
 ```
 
-```{r fit-fallback, eval = !haveSGS, echo = FALSE}
-best <- list(firstEstimate = 0.3, accuracyPercent = 0.45, numberSensitivity = 0.75)
+The data are fitted as they are given, so the shape of the dataframe decides what
+kind of fit it is. One row per target is an averaged fit, which is what a dataset
+with several trials per target has to be reduced to first.
+
+```{r aggregate, eval = FALSE}
+averaged <- aggregate(estimate ~ target, data = p, FUN = mean)
 ```
 
-```{r fit-best}
-unlist(best[c("firstEstimate", "accuracyPercent", "numberSensitivity")])
-```
-
-`outputNLfitStats()` takes the fitted parameters, runs the simulation once more,
-and returns the fit. The result holds the fit statistics in `runStats` and the
-data with the fitted values attached in `df.fitted`. The function writes nothing
-unless it is given a file name. Pass `sinkFilename` to write a header recording
-the package version, the run, the number-line settings and the parameter values,
-and pass `plotFileName` to write the plot to a pdf.
-
-```{r stats}
-statList <- list(upperBound = 100, lowerBound = 0,
-                 visibleReferencePoints = c(5, 50),
-                 firstEstimate = best$firstEstimate,
-                 accuracyPercent = best$accuracyPercent,
-                 numberSensitivity = best$numberSensitivity,
-                 targetOrder = "random")
-out <- outputNLfitStats(person, statList, pars.n = 3, loops = 200, seed = 7)
-unlist(out$runStats$fitStats)
-head(out$df.fitted)
-```
-
-The search recovered `firstEstimate` at `r best$firstEstimate` against a true
-`r truth$firstEstimate`, `accuracyPercent` at `r best$accuracyPercent` against a
-true `r truth$accuracyPercent`, and `numberSensitivity` at
-`r best$numberSensitivity` against a true `r truth$numberSensitivity`. Over the
-`r nrow(out$df.fitted)` targets the fit has an r squared of
-`r out$runStats$fitStats$r2` and a BIC of `r out$runStats$fitStats$BIC`. This
-participant was generated by the model, so a real fit will not be this good. Plot
-`df.fitted` to see it.
-
-```{r stats-plot, fig.width = 5, fig.height = 5}
-plot(estimate ~ target, data = out$df.fitted, xlim = c(0, 100), ylim = c(0, 100))
-lines(fEst ~ target, data = out$df.fitted, col = "blue")
-abline(0, 1, col = "grey70")
-```
-
-The participant sits above the identity line at the low end and below it at the
-high end, which is what an ordinal placement between two labels produces.
-
-Data can also be given one row per trial. Add a `presentation` column numbering
-the occurrences of each target value, and the fit is matched to the simulation
-trial by trial rather than target by target. A trial-level fit has more data
-points per participant at the same `pars.n`, so its BIC is on a different scale.
-Do not compare it with the BIC of a fit to averaged data.
+Leaving the trials as they are gives a trial-level fit instead. Add a
+`presentation` column numbering the occurrences of each target value, and the fit
+is matched to the simulation trial by trial rather than target by target. A
+trial-level fit has more data points per participant at the same `pars.n`, so its
+BIC is on a different scale. Do not compare it with the BIC of a fit to averaged
+data.
 
 ## What changes across versions
 
