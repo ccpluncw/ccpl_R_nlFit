@@ -8,7 +8,7 @@ targets <- c(10, 90, 50, 45)
 run <- function(m) ordinalNumberLine(targets, upperBound = 100, lowerBound = 0,
                                      firstEstimate = NULL, memoryLength = m,
                                      numberSensitivity = 1, accuracyPercent = 0,
-                                     pIncludeConceptualPoints = 0,
+                                     pConceptual = 0,
                                      visibleReferencePoints = c(0, 100),
                                      conceptualReferencePoints = NULL,
                                      targetOrder = "fixed")$fEst

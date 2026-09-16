@@ -11,7 +11,7 @@ targets <- c(10, 30, 50, 70, 90, 25, 55, 85)
 r <- ordinalNumberLine(targets, upperBound = 100, lowerBound = 0,
                        firstEstimate = 0.9, memoryLength = 2,
                        numberSensitivity = 1, accuracyPercent = 0,
-                       pIncludeConceptualPoints = 0,
+                       pConceptual = 0,
                        visibleReferencePoints = c(20, 40, 60, 80),
                        conceptualReferencePoints = NULL, targetOrder = "fixed")
 

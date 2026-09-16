@@ -6,7 +6,7 @@ library(nlFit)
 df <- data.frame(target = c(10, 30, 50, 70, 90), estimate = c(20, 35, 48, 66, 88))
 statList <- list(upperBound = 100, lowerBound = 0, firstEstimate = 0.5,
                  memoryLength = 5, numberSensitivity = 0.8, accuracyPercent = 0.2,
-                 pIncludeConceptualPoints = 0, visibleReferencePoints = c(0, 100),
+                 pConceptual = 0, visibleReferencePoints = c(0, 100),
                  conceptualReferencePoints = NULL, targetOrder = "fixed")
 
 hadPlotFile <- file.exists("Rplots.pdf")

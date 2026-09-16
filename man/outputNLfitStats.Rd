@@ -23,7 +23,7 @@ outputNLfitStats(
 \arguments{
 \item{data}{This is a dataframe that must contain the following columns: target; estimate. It may hold one row per target, the usual case, or one row per trial with a presentation column, in which case the fit is trial level. A trial-level dataframe has more rows per participant than an averaged one at the same pars.n, so its BIC and AIC are on a different scale and are not comparable with those of an averaged fit. The dataset can also contain columns that effect code the influence of different parameters (to be implemented).}
 
-\item{statList}{A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. The required elements are: firstEstimate; upperBound; lowerBound; memoryLength; targetOrder; numberSensitivity; accuracyPercent; pIncludeConceptualPoints; visibleReferencePoints; conceptualReferencePoints.}
+\item{statList}{A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. The required elements are: firstEstimate; upperBound; lowerBound; memoryLength; targetOrder; numberSensitivity; accuracyPercent; pConceptual; visibleReferencePoints; conceptualReferencePoints.}
 
 \item{dataTargetCol}{A string that identifies the name of the column in data that contains the target values. The default is "target"}
 
@@ -58,7 +58,7 @@ Function that outputs the results of the fitNL analysis
 df <- data.frame(target = c(10, 30, 50, 70, 90), estimate = c(20, 35, 48, 66, 88))
 statList <- list(upperBound = 100, lowerBound = 0, firstEstimate = 0.5,
                  memoryLength = 5, numberSensitivity = 0.8, accuracyPercent = 0.2,
-                 pIncludeConceptualPoints = 0, visibleReferencePoints = c(0, 100),
+                 pConceptual = 0, visibleReferencePoints = c(0, 100),
                  conceptualReferencePoints = NULL, targetOrder = "fixed")
 outputNLfitStats(df, statList, pars.n = 3, loops = 10)
 }

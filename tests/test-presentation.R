@@ -6,14 +6,14 @@ library(nlFit)
 
 targets <- c(30, 70, 30, 55, 30)
 parList <- list(upperBound = 100, lowerBound = 0, firstEstimate = 0.4, memoryLength = 5,
-                numberSensitivity = 0.7, accuracyPercent = 0.2, pIncludeConceptualPoints = 0,
+                numberSensitivity = 0.7, accuracyPercent = 0.2, pConceptual = 0,
                 visibleReferencePoints = c(0, 100), conceptualReferencePoints = NULL,
                 targetOrder = "random")
 
 ## one run: the presentation column counts the occurrences in presented order
 run <- ordinalNumberLine(targets, upperBound = 100, lowerBound = 0, firstEstimate = 0.4,
                          memoryLength = 5, numberSensitivity = 0.7, accuracyPercent = 0.2,
-                         pIncludeConceptualPoints = 0, visibleReferencePoints = c(0, 100),
+                         pConceptual = 0, visibleReferencePoints = c(0, 100),
                          conceptualReferencePoints = NULL, targetOrder = "fixed")
 stopifnot(identical(run$target, targets))
 stopifnot(identical(run$presentation, c(1L, 1L, 2L, 1L, 3L)))
@@ -32,7 +32,7 @@ set.seed(11)
 byTrial <- replicate(200, ordinalNumberLine(targets, upperBound = 100, lowerBound = 0,
                                             firstEstimate = 0.4, memoryLength = 5,
                                             numberSensitivity = 0.7, accuracyPercent = 0.2,
-                                            pIncludeConceptualPoints = 0,
+                                            pConceptual = 0,
                                             visibleReferencePoints = c(0, 100),
                                             conceptualReferencePoints = NULL,
                                             targetOrder = "random"), simplify = FALSE)

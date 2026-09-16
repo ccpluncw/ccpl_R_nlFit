@@ -9,7 +9,7 @@ ordinalNumberLineSim(targets, parList, loops = 1000, verbose = FALSE)
 \arguments{
 \item{targets}{A vector of numbers that are the to-be-estimated values. A value may appear more than once.}
 
-\item{parList}{A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. upperBound and visibleReferencePoints have no default and must be present. firstEstimate, memoryLength and conceptualReferencePoints may be absent or NULL, which is their default. lowerBound, numberSensitivity, accuracyPercent, pIncludeConceptualPoints and targetOrder are filled with their defaults by fillNumberlineParList() when they are absent.}
+\item{parList}{A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. upperBound and visibleReferencePoints have no default and must be present. firstEstimate, memoryLength and conceptualReferencePoints may be absent or NULL, which is their default. lowerBound, numberSensitivity, accuracyPercent, pConceptual and targetOrder are filled with their defaults by fillNumberlineParList() when they are absent.}
 
 \item{loops}{A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution. Loops are collapsed to 1 when the run is deterministic, that is, when the target order is fixed or drawn once and there is no conceptual-point inclusion draw to average over.  Default = 1000.}
 
@@ -35,7 +35,7 @@ ordinalNumberLineSim(c(2, 3, 4, 5, 6),
                      parList = list(upperBound = 10, lowerBound = 0,
                                     firstEstimate = 0.5, memoryLength = 5,
                                     numberSensitivity = 1, accuracyPercent = 0.5,
-                                    pIncludeConceptualPoints = 0,
+                                    pConceptual = 0,
                                     visibleReferencePoints = c(0, 10),
                                     conceptualReferencePoints = NULL,
                                     targetOrder = "fixed"),

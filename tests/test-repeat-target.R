@@ -8,7 +8,7 @@ library(nlFit)
 r <- ordinalNumberLine(c(30, 70, 30, 30), upperBound = 100, lowerBound = 0,
                        firstEstimate = 0.4, memoryLength = 4,
                        numberSensitivity = 1, accuracyPercent = 0,
-                       pIncludeConceptualPoints = 0,
+                       pConceptual = 0,
                        visibleReferencePoints = c(0, 100),
                        conceptualReferencePoints = NULL, targetOrder = "fixed")
 
@@ -23,7 +23,7 @@ stopifnot(isTRUE(all.equal(r$fEst, c(40, 70, 40, 40))))
 r2 <- ordinalNumberLine(c(20, 50), upperBound = 100, lowerBound = 0,
                         firstEstimate = NULL, memoryLength = 2,
                         numberSensitivity = 1, accuracyPercent = 0,
-                        pIncludeConceptualPoints = 0,
+                        pConceptual = 0,
                         visibleReferencePoints = c(0, 50, 100),
                         conceptualReferencePoints = NULL, targetOrder = "fixed")
 

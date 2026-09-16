@@ -10,7 +10,7 @@ run <- function(targets, accuracyPercent)
   ordinalNumberLine(targets, upperBound = 100, lowerBound = 0,
                     firstEstimate = NULL, memoryLength = length(targets),
                     numberSensitivity = 0.2, accuracyPercent = accuracyPercent,
-                    pIncludeConceptualPoints = 0,
+                    pConceptual = 0,
                     visibleReferencePoints = c(0, 100),
                     conceptualReferencePoints = NULL, targetOrder = "fixed")$fEst
 
@@ -34,7 +34,7 @@ snapCheck <- function(targets)
   ordinalNumberLine(targets, upperBound = 100, lowerBound = 0,
                     firstEstimate = NULL, memoryLength = length(targets),
                     numberSensitivity = 0, accuracyPercent = 1,
-                    pIncludeConceptualPoints = 0,
+                    pConceptual = 0,
                     visibleReferencePoints = c(0, 50, 100),
                     conceptualReferencePoints = NULL, targetOrder = "fixed")$fEst
 

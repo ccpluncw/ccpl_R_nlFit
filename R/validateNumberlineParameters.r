@@ -36,8 +36,8 @@ validateNumberlineParameters <- function(parList) {
 		if(parList[["firstEstimate"]] < 0 | parList[["firstEstimate"]] > 1) out <- FALSE
 	}
 
-	if(!is.null(parList[["pIncludeConceptualPoints"]])) {
-		if(parList[["pIncludeConceptualPoints"]] < 0 | parList[["pIncludeConceptualPoints"]] > 1) out <- FALSE
+	if(!is.null(parList[["pConceptual"]])) {
+		if(parList[["pConceptual"]] < 0 | parList[["pConceptual"]] > 1) out <- FALSE
 	}
 
 	if(!is.null(parList[["targetOrder"]])) {

@@ -12,7 +12,7 @@ getOrdinalNumberlineFit(
   memoryLength = NULL,
   accuracyPercent = 0,
   numberSensitivity = 1,
-  pIncludeConceptualPoints = 0,
+  pConceptual = 0,
   visibleReferencePoints = NULL,
   conceptualReferencePoints = NULL,
   loops = 1000,
@@ -40,7 +40,7 @@ getOrdinalNumberlineFit(
 
 \item{numberSensitivity}{A proportion between 0 and 1 that specifies the range of equivelance. A number's range is scaled by its distance to the nearest reference point. When numberSensitivity=1, every number is discriminated from every other. When numberSensitivity=0, a number is not discriminated from anything within its distance to the nearest reference point. DEFAULT = 1 (perfect precision)}
 
-\item{pIncludeConceptualPoints}{A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is available on a run. Each conceptual point is drawn independently, once per run.  DEFAULT = 0}
+\item{pConceptual}{A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is available on a run. Each conceptual point is drawn independently, once per run.  DEFAULT = 0}
 
 \item{visibleReferencePoints}{A vector of numbers that specify the visible (displayed) points that identify the value of positions on the number line. In the bounded task these are the upper and lower bound; in the universal task they are the labelled values and the bounds are the screen edges. This is required; there is no default.}
 

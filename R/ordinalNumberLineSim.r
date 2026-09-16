@@ -60,7 +60,7 @@ nlStopOnUnmatchedTrials <- function(matched, supplied, dataPresentationCol) {
 #' onto that estimate, so k presentations usually give two distinct predictions, not k.
 #'
 #' @param targets A vector of numbers that are the to-be-estimated values. A value may appear more than once.
-#' @param parList A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. upperBound and visibleReferencePoints have no default and must be present. firstEstimate, memoryLength and conceptualReferencePoints may be absent or NULL, which is their default. lowerBound, numberSensitivity, accuracyPercent, pIncludeConceptualPoints and targetOrder are filled with their defaults by fillNumberlineParList() when they are absent.
+#' @param parList A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. upperBound and visibleReferencePoints have no default and must be present. firstEstimate, memoryLength and conceptualReferencePoints may be absent or NULL, which is their default. lowerBound, numberSensitivity, accuracyPercent, pConceptual and targetOrder are filled with their defaults by fillNumberlineParList() when they are absent.
 #' @param loops A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution. Loops are collapsed to 1 when the run is deterministic, that is, when the target order is fixed or drawn once and there is no conceptual-point inclusion draw to average over.  Default = 1000.
 #' @param verbose A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.
 #''
@@ -72,7 +72,7 @@ nlStopOnUnmatchedTrials <- function(matched, supplied, dataPresentationCol) {
 #'                      parList = list(upperBound = 10, lowerBound = 0,
 #'                                     firstEstimate = 0.5, memoryLength = 5,
 #'                                     numberSensitivity = 1, accuracyPercent = 0.5,
-#'                                     pIncludeConceptualPoints = 0,
+#'                                     pConceptual = 0,
 #'                                     visibleReferencePoints = c(0, 10),
 #'                                     conceptualReferencePoints = NULL,
 #'                                     targetOrder = "fixed"),
@@ -99,8 +99,8 @@ ordinalNumberLineSim <- function(targets, parList, loops = 1000, verbose = FALSE
 	#a fixed or once-drawn target order still varies across loops when conceptual points
 	#are drawn in, so only collapse the loops when nothing is left to average over.
 	deterministicRun <- is.null(parList[["conceptualReferencePoints"]]) ||
-		(!is.null(parList[["pIncludeConceptualPoints"]]) &&
-			(parList[["pIncludeConceptualPoints"]] == 0 || parList[["pIncludeConceptualPoints"]] == 1))
+		(!is.null(parList[["pConceptual"]]) &&
+			(parList[["pConceptual"]] == 0 || parList[["pConceptual"]] == 1))
 
 	if(parList[["targetOrder"]] == "single")	{
 		targetSeq <- sample(targets)
@@ -127,7 +127,7 @@ ordinalNumberLineSim <- function(targets, parList, loops = 1000, verbose = FALSE
 							 memoryLength = parList[["memoryLength"]],
 							 accuracyPercent = parList[["accuracyPercent"]],
 							 numberSensitivity = parList[["numberSensitivity"]],
-							 pIncludeConceptualPoints = parList[["pIncludeConceptualPoints"]],
+							 pConceptual = parList[["pConceptual"]],
 							 visibleReferencePoints = parList[["visibleReferencePoints"]],
 							 conceptualReferencePoints = parList[["conceptualReferencePoints"]],
 							 targetOrder = parList[["targetOrder"]],

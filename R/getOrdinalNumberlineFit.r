@@ -8,7 +8,7 @@
 #' @param memoryLength An integer that specifies the number of previous estimates that are remembered. On trial t the remembered set is the estimates from trials t-memoryLength through t-1, plus every reference point. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). DEFAULT = length(targets).
 #' @param accuracyPercent a proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  DEFAULT = 0
 #' @param numberSensitivity A proportion between 0 and 1 that specifies the range of equivelance. A number's range is scaled by its distance to the nearest reference point. When numberSensitivity=1, every number is discriminated from every other. When numberSensitivity=0, a number is not discriminated from anything within its distance to the nearest reference point. DEFAULT = 1 (perfect precision)
-#' @param pIncludeConceptualPoints A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is available on a run. Each conceptual point is drawn independently, once per run.  DEFAULT = 0
+#' @param pConceptual A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is available on a run. Each conceptual point is drawn independently, once per run.  DEFAULT = 0
 #' @param visibleReferencePoints A vector of numbers that specify the visible (displayed) points that identify the value of positions on the number line. In the bounded task these are the upper and lower bound; in the universal task they are the labelled values and the bounds are the screen edges. This is required; there is no default.
 #' @param conceptualReferencePoints A vector of numbers that specify any conceptual points that the participant may use to identify the value of positions on the number line. These may be the middle of the bounded number-line, or a learned position on the number_line. Currently, conceptualReferencePoints are only modeled if they are used thoughout the task (not introduced part of the way through) Default is NULL.
 #' @param loops A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution.  Default is 1000.
@@ -31,7 +31,7 @@
 #'                         firstEstimate = 0.5, numberSensitivity = 0.8,
 #'                         accuracyPercent = 0.2, loops = 10, pars.n = 3)
 
-getOrdinalNumberlineFit <- function(data, upperBound, lowerBound = 0,firstEstimate = NULL, memoryLength = NULL, accuracyPercent = 0, numberSensitivity = 1, pIncludeConceptualPoints = 0, visibleReferencePoints = NULL, conceptualReferencePoints = NULL, loops = 1000, targetOrder = "random", dataTargetCol = "target", dataEstimateCol = "estimate", minimizeStat = 'BIC', pars.n, verbose = FALSE, dataPresentationCol = "presentation") {
+getOrdinalNumberlineFit <- function(data, upperBound, lowerBound = 0,firstEstimate = NULL, memoryLength = NULL, accuracyPercent = 0, numberSensitivity = 1, pConceptual = 0, visibleReferencePoints = NULL, conceptualReferencePoints = NULL, loops = 1000, targetOrder = "random", dataTargetCol = "target", dataEstimateCol = "estimate", minimizeStat = 'BIC', pars.n, verbose = FALSE, dataPresentationCol = "presentation") {
 
   #these are structural inputs, not points in the search space, so a bad one stops the
   #run rather than scoring Inf and leaving the search without a signal.
@@ -43,7 +43,7 @@ getOrdinalNumberlineFit <- function(data, upperBound, lowerBound = 0,firstEstima
   }
   nlCheckFitData(data, dataTargetCol, dataEstimateCol)
 
-  parList <- list(upperBound = upperBound, lowerBound = lowerBound,firstEstimate = firstEstimate, memoryLength = memoryLength, numberSensitivity = numberSensitivity, pIncludeConceptualPoints = pIncludeConceptualPoints, visibleReferencePoints = visibleReferencePoints, conceptualReferencePoints = conceptualReferencePoints, accuracyPercent = accuracyPercent, targetOrder = targetOrder)
+  parList <- list(upperBound = upperBound, lowerBound = lowerBound,firstEstimate = firstEstimate, memoryLength = memoryLength, numberSensitivity = numberSensitivity, pConceptual = pConceptual, visibleReferencePoints = visibleReferencePoints, conceptualReferencePoints = conceptualReferencePoints, accuracyPercent = accuracyPercent, targetOrder = targetOrder)
 
   #make sure minimizeStat is valid
   minimizeOpts <- c("BIC", "AIC", "R_Square")

@@ -6,7 +6,7 @@ library(nlFit)
 
 bounded <- function(targets, ...)
   ordinalNumberLine(targets, upperBound = 100, lowerBound = 0,
-                    firstEstimate = NULL, pIncludeConceptualPoints = 0,
+                    firstEstimate = NULL, pConceptual = 0,
                     conceptualReferencePoints = NULL, targetOrder = "fixed", ...)$fEst
 
 ## the earlier of two equal remembered values is the anchor. The third and fourth

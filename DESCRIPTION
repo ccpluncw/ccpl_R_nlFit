@@ -1,6 +1,6 @@
 Package: nlFit
 Title: Fit the Ordinal Model of Number-Line Estimation
-Version: 0.2.0
+Version: 0.3.0
 Authors@R:
     person("Dale J.", "Cohen",
            email = "cohend@uncw.edu",

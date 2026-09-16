@@ -12,7 +12,7 @@ ordinalNumberLine(
   memoryLength = NULL,
   accuracyPercent = 0,
   numberSensitivity = 1,
-  pIncludeConceptualPoints = 0,
+  pConceptual = 0,
   visibleReferencePoints = NULL,
   conceptualReferencePoints = NULL,
   targetOrder = "random",
@@ -34,7 +34,7 @@ ordinalNumberLine(
 
 \item{numberSensitivity}{A proportion between 0 and 1 that specifies the range of equivelance. A number's range is scaled by its distance to the nearest reference point, so numbers near a landmark are discriminated finely and numbers far from one coarsely. When numberSensitivity=1, every number is discriminated from every other. When numberSensitivity=0, a number is not discriminated from anything within its distance to the nearest reference point. Two numbers are treated as the same when either one falls in the other's range; a target is compared to a reference point in one direction only, so labels stay perfectly discriminable. DEFAULT = 1 (perfect precision)}
 
-\item{pIncludeConceptualPoints}{A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is available on a run. Each conceptual point is drawn independently, once per run, and is then present on every trial of that run. Because the drawn points enter the reference set, this probability moves the estimates through two channels: which anchors are available and how wide each target's range of equivalence is.  DEFAULT = 0}
+\item{pConceptual}{A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is available on a run. Each conceptual point is drawn independently, once per run, and is then present on every trial of that run. Because the drawn points enter the reference set, this probability moves the estimates through two channels: which anchors are available and how wide each target's range of equivalence is.  DEFAULT = 0}
 
 \item{visibleReferencePoints}{A vector of numbers that specify the visible (displayed) points that identify the value of positions on the number line. In the bounded task these are the upper and lower bound; in the universal task they are the labelled values and the bounds are the screen edges. This is required; there is no default.}
 

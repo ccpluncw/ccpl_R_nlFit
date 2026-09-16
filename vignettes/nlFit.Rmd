@@ -38,7 +38,7 @@ A **visible reference point** is a labelled position the participant can see.
 Pass these as `visibleReferencePoints`. They are required. A **conceptual
 reference point** is a position the participant supplies without seeing it, such
 as the middle of the line. Pass these as `conceptualReferencePoints`, and give
-the probability that one is available on a run as `pIncludeConceptualPoints`. A
+the probability that one is available on a run as `pConceptual`. A
 **remembered estimate** is an estimate the participant made earlier in the same
 run. It anchors later targets, but it is not a reference point. The distinction
 matters in one place. A reference point is always discriminable from the target.
@@ -211,14 +211,14 @@ text(est14, 0.38, paste("a =", c(0, 0.5, 1)), cex = 0.8)
 
 A conceptual reference point is a reference point the participant may or may not
 have on a given run. Each one is drawn independently once per run and is then
-present on every trial of that run. `pIncludeConceptualPoints` is the probability
+present on every trial of that run. `pConceptual` is the probability
 of that draw. Here the participant may hold a conceptual point at 25.
 
 ```{r conceptual}
 c.out <- nl(targets4, firstEstimate = 0.5,
-            conceptualReferencePoints = 25, pIncludeConceptualPoints = 0)
+            conceptualReferencePoints = 25, pConceptual = 0)
 c.in  <- nl(targets4, firstEstimate = 0.5,
-            conceptualReferencePoints = 25, pIncludeConceptualPoints = 1)
+            conceptualReferencePoints = 25, pConceptual = 1)
 data.frame(target = targets4, p.0 = c.out$fEst, p.1 = c.in$fEst)
 ```
 
@@ -235,7 +235,7 @@ abline(v = 25, col = "grey85", lty = 2)
 points(targets4, c.out$fEst, pch = 1)
 points(targets4, c.in$fEst,  pch = 16)
 legend("topleft", c("0", "1"), pch = c(1, 16),
-       title = "pIncludeConceptualPoints", bty = "n")
+       title = "pConceptual", bty = "n")
 ```
 
 ## Many runs

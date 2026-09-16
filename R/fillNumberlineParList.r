@@ -13,7 +13,7 @@ fillNumberlineParList <- function(parList) {
 	if(is.null(parList[["lowerBound"]])) parList[["lowerBound"]] <- 0
 	if(is.null(parList[["accuracyPercent"]])) parList[["accuracyPercent"]] <- 0
 	if(is.null(parList[["numberSensitivity"]])) parList[["numberSensitivity"]] <- 1
-	if(is.null(parList[["pIncludeConceptualPoints"]])) parList[["pIncludeConceptualPoints"]] <- 0
+	if(is.null(parList[["pConceptual"]])) parList[["pConceptual"]] <- 0
 	if(is.null(parList[["targetOrder"]])) parList[["targetOrder"]] <- "random"
 
 	return(parList)

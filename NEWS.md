@@ -1,3 +1,13 @@
+# nlFit 0.3.0
+
+## Renamed parameter
+
+* `pIncludeConceptualPoints` is now `pConceptual` (renamed, same meaning). Sink
+  files write `pConceptual = ` in place of `p(conceptualReferencePoints) = `.
+  There is no compatibility alias: a script that passes the old name must be
+  updated. A saved fit frame written under an earlier version keeps the old
+  column name and can be renamed on read.
+
 # nlFit 0.2.0
 
 Corrections to the memory window, the equivalence bands and the handling of
