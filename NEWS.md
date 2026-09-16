@@ -1,5 +1,15 @@
 # nlFit 0.3.0
 
+## New
+
+* New `nlFit()` fits the model to one participant's data in a single call,
+  wrapping the objective, the grid search and the fit report. `free` names the
+  searched parameters; the rest are fixed at their arguments. Presets
+  `search = "full"` and `"quick"`. It returns an object of class `"nlFit"` with
+  `print()`, `plot()` and `as.data.frame()` methods, and writes nothing unless it
+  is given a file name. The search is in smartGridSearch2, which stays in
+  Suggests; `nlFit()` stops with the install line when it is absent.
+
 ## Renamed parameter
 
 * `pIncludeConceptualPoints` is now `pConceptual` (renamed, same meaning). Sink
