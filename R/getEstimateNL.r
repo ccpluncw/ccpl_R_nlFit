@@ -1,8 +1,4 @@
-# Design rule for this package: extend the model by adding arguments whose
-# defaults reproduce the current behaviour exactly; never change the meaning of
-# an existing parameter. The anchor offset, for instance, is fixed at one rank on
-# each side and may become a parameter in the future.
-
+#anchors are the remembered values one rank below and one rank above the target
 
 #' This function simulates the numberLine process and returns the predicted estimates.
 #'
