@@ -174,6 +174,16 @@ nlFitStopOnBadFixed <- function(parList, nTargets) {
 #' The search is in the smartGridSearch2 package, which is not on CRAN. `nlFit()`
 #' stops with the install line when it is not available.
 #'
+#' When firstEstimate is free the fit reports its standard error, computed from
+#' the information the fitted values carry about it. The slopes of the fitted
+#' estimates are central differences with a step of 0.01, one-sided within 0.01 of
+#' 0 or 1, and use one random seed so the simulation noise cancels. The error
+#' variance is the mean squared residual. When accuracyPercent is free the
+#' standard error allows for the trade-off between the two. Every other parameter
+#' is treated as known at its fitted value. A large standard error means the data
+#' say little about firstEstimate, which is expected when accuracyPercent is high
+#' because firstEstimate acts through the weight on ordinal placement.
+#'
 #' @param data A dataframe that must contain the following columns: target; estimate. It may hold one row per target, the usual case, or one row per trial with a presentation column, in which case the fit is trial level.
 #' @param upperBound A number that identifes the upper point beyond which the partcipant cannot respond. In the bounded task this is the upper end of the number line and is also passed as a visible reference point. In the universal task it is the upper screen edge. This is required; there is no default.
 #' @param lowerBound A number that identifes the lower point beyond which the partcipant cannot respond. In the bounded task this is the lower end of the number line and is also passed as a visible reference point. In the universal task it is the lower screen edge. DEFAULT = 0.
@@ -196,7 +206,7 @@ nlFitStopOnBadFixed <- function(parList, nTargets) {
 #' @param plotFileName A string that identifies the name of file (.pdf) in which the data plot will be saved. The default is NULL, whereby no plot is drawn and no graphics device is opened. Use plot() on the result to draw it.
 #' @param verbose A boolean that specifies whether to print intermediate steps. This is used for debugging. Default is FALSE.
 #''
-#' @return An object of class "nlFit": a list with `parameters` (a dataframe with one row per model parameter giving its value, whether it was free, and the range it was searched over), `fitStats` (r2, BIC, AIC, the number of free parameters, the number of rows fitted, and the statistic minimized), `fitted` (the data with the fitted estimate attached as fEst), `search` (the raw search result), `line` (the number-line settings), `columns` (the column names used), `call` and `version`. The function writes nothing unless it is given a file name.
+#' @return An object of class "nlFit": a list with `parameters` (a dataframe with one row per model parameter giving its value, whether it was free, the range it was searched over, and \code{se}, the standard error, which is given for firstEstimate when it is free, is \code{Inf} when the fit carries no information about firstEstimate, and is \code{NA} otherwise), `fitStats` (r2, BIC, AIC, the number of free parameters, the number of rows fitted, and the statistic minimized), `fitted` (the data with the fitted estimate attached as fEst), `search` (the raw search result), `line` (the number-line settings), `columns` (the column names used), `call` and `version`. The function writes nothing unless it is given a file name.
 #' @keywords ordinalNumberline fit number-line
 #' @export
 #' @importFrom utils packageVersion modifyList
@@ -344,6 +354,18 @@ nlFit <- function(data, upperBound, lowerBound = 0,
 							plotFileName = plotFileName,
 							dataPresentationCol = dataPresentationCol)
 
+	firstEstimateSE <- NA_real_
+	if("firstEstimate" %in% freeNames) {
+		firstEstimateSE <- nlFirstEstimateSE(statList, data, out$df.fitted,
+											 "accuracyPercent" %in% freeNames,
+											 dataTargetCol, dataEstimateCol,
+											 dataPresentationCol, finalLoops)
+		if(!is.null(sinkFilename)) {
+			cat(" First Estimate SE = ", firstEstimateSE, "\n",
+				file = sinkFilename, append = TRUE)
+		}
+	}
+
 	parameterOrder <- nlFitParameterOrder()
 	parameters <- data.frame(
 		parameter = parameterOrder,
@@ -358,6 +380,7 @@ nlFit <- function(data, upperBound, lowerBound = 0,
 		upper = vapply(parameterOrder, function(p) {
 			if(p %in% freeNames) as.numeric(resolved[[p]]$upper) else NA_real_
 		}, numeric(1)),
+		se = ifelse(parameterOrder == "firstEstimate", firstEstimateSE, NA_real_),
 		row.names = NULL, stringsAsFactors = FALSE)
 
 	fitStats <- list(r2 = out$runStats$fitStats$r2, BIC = out$runStats$fitStats$BIC,
@@ -387,7 +410,8 @@ nlFit <- function(data, upperBound, lowerBound = 0,
 #' and how many rows were fitted, then one line per model parameter and one line
 #' of fit statistics. A parameter that was searched shows the range it was
 #' searched over; a parameter whose value is the midpoint placement rule rather
-#' than a number prints as NULL.
+#' than a number prints as NULL. A free firstEstimate also shows its standard
+#' error.
 #'
 #' @param x An object of class "nlFit".
 #' @param ... Further arguments, ignored.
@@ -410,8 +434,13 @@ print.nlFit <- function(x, ...) {
 		} else {
 			"fixed"
 		}
+		seShown <- if(isTRUE(x$parameters$se[i] >= 0)) {
+			sprintf("   SE %.3f", x$parameters$se[i])
+		} else {
+			""
+		}
 		cat("  ", formatC(x$parameters$parameter[i], width = -18), formatC(shown, width = -16),
-			range, "\n", sep = "")
+			range, seShown, "\n", sep = "")
 	}
 
 	cat("  r2 = ", x$fitStats$r2, "   BIC = ", x$fitStats$BIC, "   AIC = ", x$fitStats$AIC,
@@ -457,8 +486,8 @@ plot.nlFit <- function(x, ...) {
 
 #' Turn a fitted ordinal number-line model into one row.
 #'
-#' Returns a one-row dataframe holding the five model parameters and the fit
-#' statistics. Rows from several fits can be stacked with `rbind()` to give one
+#' Returns a one-row dataframe holding the five model parameters, the standard
+#' error of firstEstimate and the fit statistics. Rows from several fits can be stacked with `rbind()` to give one
 #' row per participant. A parameter that was left at the midpoint placement rule
 #' rather than a number is NA.
 #'
@@ -467,7 +496,7 @@ plot.nlFit <- function(x, ...) {
 #' @param optional Ignored; present for consistency with the generic. Default is FALSE.
 #' @param ... Further arguments, ignored.
 #''
-#' @return A dataframe with one row: the five model parameters, r2, BIC, AIC and pars.n.
+#' @return A dataframe with one row: the five model parameters, \code{firstEstimate.se} (\code{NA} when firstEstimate was fixed, \code{Inf} when the fit carries no information about it), r2, BIC, AIC and pars.n.
 #' @keywords ordinalNumberline fit dataframe
 #' @method as.data.frame nlFit
 #' @export
@@ -476,7 +505,59 @@ as.data.frame.nlFit <- function(x, row.names = NULL, optional = FALSE, ...) {
 	values <- as.list(x$parameters$value)
 	names(values) <- x$parameters$parameter
 
-	data.frame(c(values, list(r2 = x$fitStats$r2, BIC = x$fitStats$BIC,
+	isFirstEstimate <- x$parameters$parameter == "firstEstimate"
+	data.frame(c(values, list(firstEstimate.se = c(x$parameters$se[isFirstEstimate], NA_real_)[1],
+							  r2 = x$fitStats$r2, BIC = x$fitStats$BIC,
 							  AIC = x$fitStats$AIC, pars.n = x$fitStats$pars.n)),
 			   row.names = row.names, stringsAsFactors = FALSE)
+}
+
+
+#standard error of firstEstimate, other parameters known except accuracy
+nlFirstEstimateSE <- function(statList, data, df.fitted, accuracyFree,
+							  dataTargetCol, dataEstimateCol,
+							  dataPresentationCol, loops, h = 0.01) {
+	#leave the caller's random stream where it was
+	seedBefore <- get0(".Random.seed", envir = globalenv(), inherits = FALSE)
+	on.exit(
+		if(is.null(seedBefore)) {
+			rm(".Random.seed", envir = globalenv())
+		} else {
+			assign(".Random.seed", seedBefore, envir = globalenv())
+		}
+	)
+
+	fittedAt <- function(parameter, value) {
+		parList <- statList
+		parList[[parameter]] <- value
+		#one seed for all predictions so loop noise cancels in a slope
+		set.seed(1)
+		simulated <- ordinalNumberLineSim(data[[dataTargetCol]], parList, loops = loops)
+		nlMatchFitted(simulated, data, dataTargetCol, dataPresentationCol)$fEst
+	}
+	slope <- function(parameter) {
+		up <- min(statList[[parameter]] + h, 1)
+		down <- max(statList[[parameter]] - h, 0)
+		(fittedAt(parameter, up) - fittedAt(parameter, down)) / (up - down)
+	}
+
+	tolerance <- sqrt(.Machine$double.eps)
+	span <- statList$upperBound - statList$lowerBound
+	firstSlope <- slope("firstEstimate")
+	information <- sum(firstSlope^2)
+	if(information <= (span * tolerance)^2) return(Inf)
+
+	if(accuracyFree) {
+		accuracySlope <- slope("accuracyPercent")
+		accuracyInformation <- sum(accuracySlope^2)
+		if(accuracyInformation > 0) {
+			#information left in firstEstimate after accuracy takes its share
+			partial <- information - sum(firstSlope * accuracySlope)^2 / accuracyInformation
+			if(partial <= information * tolerance) return(Inf)
+			information <- partial
+		}
+	}
+
+	errorVariance <- mean((df.fitted[[dataEstimateCol]] - df.fitted$fEst)^2)
+	sqrt(errorVariance / information)
 }

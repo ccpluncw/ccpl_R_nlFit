@@ -41,13 +41,7 @@ outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstim
 
 	#trial-level data are matched presentation by presentation; averaged data have no
 	#presentation column, so the presentations of a repeated value are averaged too.
-	if(!is.null(dataPresentationCol) && dataPresentationCol %in% names(data)) {
-		df.fitted <- merge(df.fitted, data, by.x = c("target", "presentation"), by.y = c(dataTargetCol, dataPresentationCol))
-		nlStopOnUnmatchedTrials(nrow(df.fitted), nrow(data), dataPresentationCol)
-	} else {
-		df.fitted <- aggregate(df.fitted["fEst"], by = list(target = df.fitted$target), FUN = mean, na.rm = TRUE)
-		df.fitted <- merge(df.fitted, data,  by.x = "target", by.y = dataTargetCol)
-	}
+	df.fitted <- nlMatchFitted(df.fitted, data, dataTargetCol, dataPresentationCol)
 
 	fit.r2 <- round(chutils::ch.R2(df.fitted[[dataEstimateCol]], df.fitted[["fEst"]]),2)
 	fit.BIC <- round(chutils::ch.IC(df.fitted[[dataEstimateCol]], df.fitted[["fEst"]], pars.n, ICtype = "BIC"), 0)
@@ -119,4 +113,16 @@ outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstim
   outlist <- list(df.fitted = df.fitted, runStats = runStats)
 
 	return(outlist)
+}
+
+
+#join simulated rows to the data, averaging repeats without a presentation
+nlMatchFitted <- function(df.fitted, data, dataTargetCol, dataPresentationCol) {
+	if(!is.null(dataPresentationCol) && dataPresentationCol %in% names(data)) {
+		matched <- merge(df.fitted, data, by.x = c("target", "presentation"), by.y = c(dataTargetCol, dataPresentationCol))
+		nlStopOnUnmatchedTrials(nrow(matched), nrow(data), dataPresentationCol)
+		return(matched)
+	}
+	averaged <- aggregate(df.fitted["fEst"], by = list(target = df.fitted$target), FUN = mean, na.rm = TRUE)
+	merge(averaged, data, by.x = "target", by.y = dataTargetCol)
 }

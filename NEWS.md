@@ -1,3 +1,14 @@
+# nlFit 0.3.1
+
+## New
+
+* `nlFit()` reports the standard error of a free `firstEstimate`. It is computed
+  from the information the fitted values carry about the parameter, using central
+  differences, and allows for the trade-off with `accuracyPercent` when that is
+  free. It appears in `print()`, in the `se` column of `fit$parameters`, in the
+  `firstEstimate.se` column of `as.data.frame()`, and in the `sinkFilename`
+  report. The estimates, the predictions and the random stream are unchanged.
+
 # nlFit 0.3.0
 
 ## New

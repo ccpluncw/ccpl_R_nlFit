@@ -327,8 +327,8 @@ The parameters trade off against one another, so on noisy estimates several sets
 fit about equally well and the search returns the one that scores best, which
 need not be the one the data came from.
 
-`as.data.frame()` reduces the fit to one row: the five parameters and the fit
-statistics.
+`as.data.frame()` reduces the fit to one row: the five parameters, the standard
+error of `firstEstimate` and the fit statistics.
 
 ```{r nlfit-row, eval = haveSGS}
 as.data.frame(fit)

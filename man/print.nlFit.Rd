@@ -20,7 +20,8 @@ Prints the version the fit was made under, how many parameters were searched
 and how many rows were fitted, then one line per model parameter and one line
 of fit statistics. A parameter that was searched shows the range it was
 searched over; a parameter whose value is the midpoint placement rule rather
-than a number prints as NULL.
+than a number prints as NULL. A free firstEstimate also shows its standard
+error.
 }
 \keyword{fit}
 \keyword{ordinalNumberline}

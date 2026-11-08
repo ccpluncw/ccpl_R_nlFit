@@ -17,11 +17,11 @@
 '}
 }
 \value{
-A dataframe with one row: the five model parameters, r2, BIC, AIC and pars.n.
+A dataframe with one row: the five model parameters, \code{firstEstimate.se} (\code{NA} when firstEstimate was fixed, \code{Inf} when the fit carries no information about it), r2, BIC, AIC and pars.n.
 }
 \description{
-Returns a one-row dataframe holding the five model parameters and the fit
-statistics. Rows from several fits can be stacked with \code{rbind()} to give one
+Returns a one-row dataframe holding the five model parameters, the standard
+error of firstEstimate and the fit statistics. Rows from several fits can be stacked with \code{rbind()} to give one
 row per participant. A parameter that was left at the midpoint placement rule
 rather than a number is NA.
 }

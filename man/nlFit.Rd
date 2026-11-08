@@ -73,7 +73,7 @@ nlFit(
 '}
 }
 \value{
-An object of class "nlFit": a list with \code{parameters} (a dataframe with one row per model parameter giving its value, whether it was free, and the range it was searched over), \code{fitStats} (r2, BIC, AIC, the number of free parameters, the number of rows fitted, and the statistic minimized), \code{fitted} (the data with the fitted estimate attached as fEst), \code{search} (the raw search result), \code{line} (the number-line settings), \code{columns} (the column names used), \code{call} and \code{version}. The function writes nothing unless it is given a file name.
+An object of class "nlFit": a list with \code{parameters} (a dataframe with one row per model parameter giving its value, whether it was free, the range it was searched over, and \code{se}, the standard error, which is given for firstEstimate when it is free, is \code{Inf} when the fit carries no information about firstEstimate, and is \code{NA} otherwise), \code{fitStats} (r2, BIC, AIC, the number of free parameters, the number of rows fitted, and the statistic minimized), \code{fitted} (the data with the fitted estimate attached as fEst), \code{search} (the raw search result), \code{line} (the number-line settings), \code{columns} (the column names used), \code{call} and \code{version}. The function writes nothing unless it is given a file name.
 }
 \description{
 Fits the ordinal number-line model to a participant's estimates in one call. It
@@ -93,6 +93,16 @@ averaged fit. Fit one participant per call.
 
 The search is in the smartGridSearch2 package, which is not on CRAN. \code{nlFit()}
 stops with the install line when it is not available.
+
+When firstEstimate is free the fit reports its standard error, computed from
+the information the fitted values carry about it. The slopes of the fitted
+estimates are central differences with a step of 0.01, one-sided within 0.01 of
+0 or 1, and use one random seed so the simulation noise cancels. The error
+variance is the mean squared residual. When accuracyPercent is free the
+standard error allows for the trade-off between the two. Every other parameter
+is treated as known at its fitted value. A large standard error means the data
+say little about firstEstimate, which is expected when accuracyPercent is high
+because firstEstimate acts through the weight on ordinal placement.
 }
 \examples{
 \donttest{
