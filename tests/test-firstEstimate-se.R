@@ -133,10 +133,10 @@ if(requireNamespace("smartGridSearch2", quietly = TRUE)) {
 	report <- tempfile(fileext = ".txt")
 	reported <- run(free = c("firstEstimate", "accuracyPercent"), sinkFilename = report)
 	lines <- readLines(report)
-	stopifnot(sum(grepl("First Estimate SE", lines)) == 1)
+	stopifnot(sum(grepl("^First Estimate = .*\\(SE = [0-9.]+\\)", lines)) == 1)
 	heldReport <- tempfile(fileext = ".txt")
 	invisible(run(free = "accuracyPercent", firstEstimate = 0.3, sinkFilename = heldReport))
-	stopifnot(!any(grepl("First Estimate SE", readLines(heldReport))))
+	stopifnot(!any(grepl("SE =", readLines(heldReport))))
 	unlink(c(report, heldReport))
 
 	#trial-level data work the same way
@@ -150,3 +150,13 @@ if(requireNamespace("smartGridSearch2", quietly = TRUE)) {
 	invisible(capture.output(print(old)))
 	stopifnot(is.na(as.data.frame(old)$firstEstimate.se))
 }
+
+#the report function computes it only when told firstEstimate was searched
+direct <- data.frame(target = targets, estimate = person$estimate)
+directList <- c(list(upperBound = 100, lowerBound = 0, visibleReferencePoints = c(0, 100),
+					 conceptualReferencePoints = NULL), pars)
+withSE <- outputNLfitStats(direct, directList, pars.n = 2, loops = 1,
+						   free = c("firstEstimate", "accuracyPercent"))
+noSE <- outputNLfitStats(direct, directList, pars.n = 2, loops = 1)
+stopifnot(nearly(withSE$runStats$fitStats$firstEstimateSE, expected),
+		  is.na(noSE$runStats$fitStats$firstEstimateSE))

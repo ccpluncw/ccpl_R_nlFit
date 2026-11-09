@@ -1,3 +1,27 @@
+# nlFit 0.4.0
+
+## Changes that move the predictions
+
+* `numberSensitivity` now lies on one axis from -1 to 1, with no added parameter.
+  At or below 0, sensitivity, `accuracyPercent` and `pConceptual` act as 0. Below
+  0 each visible point is used with probability `1 + numberSensitivity`.
+* Reference points are drawn on every trial. Only the visible points used on a
+  trial set its range of equivalence, conceptual points are anchors only, and a
+  bound remains a response limit when its label is not used.
+* With no conceptual point and `numberSensitivity` above 0 the predictions are
+  as in 0.3.1. They differ at exactly 0, where `accuracyPercent` acts as 0, and
+  when a conceptual point is used. Version 0.3.1 is tagged `v0.3.1`.
+
+## New
+
+* `nlFit()` searches `numberSensitivity` over [-1, 1], or [0, 1] when every
+  visible point is a bound, because label use cannot be recovered from the
+  estimates there.
+* `outputNLfitStats()` gains `free`, the names of the searched parameters. When it
+  names `firstEstimate`, the standard error is written beside it in the report,
+  as `First Estimate = 0.035 (SE = 0.04)`, and returned as
+  `runStats$fitStats$firstEstimateSE`. `nlFit()` passes it.
+
 # nlFit 0.3.1
 
 ## New

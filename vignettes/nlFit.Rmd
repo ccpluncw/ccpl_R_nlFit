@@ -38,7 +38,7 @@ A **visible reference point** is a labelled position the participant can see.
 Pass these as `visibleReferencePoints`. They are required. A **conceptual
 reference point** is a position the participant supplies without seeing it, such
 as the middle of the line. Pass these as `conceptualReferencePoints`, and give
-the probability that one is available on a run as `pConceptual`. A
+the probability that one is used on a trial as `pConceptual`. A
 **remembered estimate** is an estimate the participant made earlier in the same
 run. It anchors later targets, but it is not a reference point. The distinction
 matters in one place. A reference point is always discriminable from the target.
@@ -141,7 +141,7 @@ legend("topleft", c("4", "1"), pch = c(16, 1), title = "memoryLength", bty = "n"
 ### Number sensitivity
 
 Every number carries a range of equivalent numbers. The half width of that range
-is `(1 - numberSensitivity)` times the distance to the nearest reference point.
+is `(1 - numberSensitivity)` times the distance to the nearest visible point.
 Target 15 is 10 away from the label 5, so at `numberSensitivity = 0.8` its range
 runs from 13 to 17. A later 14 falls inside that range and is treated as the same
 number as 15. It is placed where 15 was placed, and the linear process aims at 15
@@ -210,9 +210,8 @@ text(est14, 0.38, paste("a =", c(0, 0.5, 1)), cex = 0.8)
 ### Conceptual reference points
 
 A conceptual reference point is a reference point the participant may or may not
-have on a given run. Each one is drawn independently once per run and is then
-present on every trial of that run. `pConceptual` is the probability
-of that draw. Here the participant may hold a conceptual point at 25.
+use on a given trial. Each one is drawn independently on every trial. `pConceptual`
+is the probability of that draw. Here the participant may hold a conceptual point at 25.
 
 ```{r conceptual}
 c.out <- nl(targets4, firstEstimate = 0.5,
@@ -222,9 +221,8 @@ c.in  <- nl(targets4, firstEstimate = 0.5,
 data.frame(target = targets4, p.0 = c.out$fEst, p.1 = c.in$fEst)
 ```
 
-The point moves the estimates two ways. It is an anchor, so it splits the region
-between 5 and 50 in two, and it is a reference point, so it narrows the range of
-equivalent numbers for every target near it.
+The point is an anchor, so it splits the region between 5 and 50 in two. It does
+not set the range of equivalent numbers, which comes only from the visible points.
 
 ```{r conceptual-plot, echo = FALSE}
 plot(targets4, c.out$fEst, type = "n", xlim = c(0, 100), ylim = c(0, 100),
@@ -237,6 +235,25 @@ points(targets4, c.in$fEst,  pch = 16)
 legend("topleft", c("0", "1"), pch = c(1, 16),
        title = "pConceptual", bty = "n")
 ```
+
+### Number sensitivity below zero
+
+`numberSensitivity` lies on one axis from -1 to 1, which describes a participant
+who may not use the labels on the line without adding a parameter. Above 0 the
+axis is the usual sensitivity and every label is used. At or below 0 sensitivity
+is 0, and `accuracyPercent` and `pConceptual` act as 0, because the model takes
+sensitivity to come before ordinal placement and ordinal placement before accurate
+placement. Below 0 each label is used with probability `1 + numberSensitivity`, so
+at -0.3 a label is used on 70 percent of trials and at -1 on none.
+
+A label is drawn on every trial. Only the labels used on a trial set its range of
+equivalence, scaled to the nearest one, or to the length of the response region
+when none is used. A label that is not used is neither a range-setter nor an anchor
+on that trial, although a bound remains a response limit.
+
+`nlFit()` searches `numberSensitivity` from -1 to 1. When every visible point is a
+bound it searches from 0 to 1, because whether a participant uses the labels at
+the ends of a line cannot be recovered from the estimates.
 
 ## Many runs
 
@@ -327,8 +344,8 @@ The parameters trade off against one another, so on noisy estimates several sets
 fit about equally well and the search returns the one that scores best, which
 need not be the one the data came from.
 
-`as.data.frame()` reduces the fit to one row: the five parameters, the standard
-error of `firstEstimate` and the fit statistics.
+`as.data.frame()` reduces the fit to one row: the five parameters,
+the standard error of `firstEstimate` and the fit statistics.
 
 ```{r nlfit-row, eval = haveSGS}
 as.data.frame(fit)
@@ -386,12 +403,8 @@ data.
 
 ## What changes across versions
 
-Parameters keep their meaning. A future release will not redefine
-`numberSensitivity` or `firstEstimate`, and an analysis run under a later version
-will read the same way. Extensions arrive as new arguments whose defaults
-reproduce the behaviour described here. Changes that do move the predictions are
-listed in `NEWS.md`, and the version behind the published fits is kept under a
-git tag.
+Changes that move the predictions are listed in `NEWS.md`. Each release is kept
+under a git tag, so an analysis can be rerun under the version that produced it.
 
 ## Acknowledgments
 

@@ -4,14 +4,22 @@
 # trials it is drawn from. A user-supplied range may narrow a domain; it may not
 # widen it, so a range outside the domain is an error rather than a clipped range
 # the caller never hears about.
-nlFitDomains <- function(nTargets) {
+nlFitDomains <- function(nTargets, labelled = TRUE) {
 	proportion <- function() list(lower = 0, upper = 1, step = 0.001, integer = FALSE,
 								  description = "a proportion in [0, 1]")
+	#ns starts at -1, or at 0 when only the bounds are visible
+	sensitivity <- if(labelled) {
+		list(lower = -1, upper = 1, step = 0.001, integer = FALSE,
+			 description = "a number in [-1, 1]")
+	} else {
+		list(lower = 0, upper = 1, step = 0.001, integer = FALSE,
+			 description = "a number in [0, 1] when every visible point is a bound")
+	}
 	list(firstEstimate = proportion(),
 		 memoryLength = list(lower = 1, upper = nTargets, step = 1, integer = TRUE,
 							 description = paste0("an integer in [1, ", nTargets, "]")),
 		 accuracyPercent = proportion(),
-		 numberSensitivity = proportion(),
+		 numberSensitivity = sensitivity,
 		 pConceptual = proportion())
 }
 
@@ -97,8 +105,8 @@ nlFitResolveRange <- function(parameter, range, domain) {
 # named list searches each named parameter over the range given. Presence in free
 # is what makes a parameter free, so a name that is not a parameter of the model,
 # or a name given twice, is an error.
-nlFitResolveFree <- function(free, nTargets) {
-	domains <- nlFitDomains(nTargets)
+nlFitResolveFree <- function(free, nTargets, labelled = TRUE) {
+	domains <- nlFitDomains(nTargets, labelled)
 
 	if(is.null(free) || length(free) == 0) {
 		stop("nlFit: free names no parameters, so there is nothing to fit. To score a set of parameters you already have, use outputNLfitStats().")
@@ -190,12 +198,12 @@ nlFitStopOnBadFixed <- function(parList, nTargets) {
 #' @param lowerBound A number that identifes the lower point beyond which the partcipant cannot respond. In the bounded task this is the lower end of the number line and is also passed as a visible reference point. In the universal task it is the lower screen edge. DEFAULT = 0.
 #' @param visibleReferencePoints A vector of numbers that specify the visible (displayed) points that identify the value of positions on the number line. In the bounded task these are the upper and lower bound; in the universal task they are the labelled values and the bounds are the screen edges. This is required; there is no default.
 #' @param conceptualReferencePoints A vector of numbers that specify any conceptual points that the participant may use to identify the value of positions on the number line. Default is NULL.
-#' @param free The parameters the search varies. Either a character vector of parameter names, each searched over its whole domain at the default step, or a named list whose elements are `c(lower, upper)` or `c(lower, upper, step)`, each searched over the range given. Presence in `free` is what makes a parameter free; a parameter that is not named is held fixed at its own argument. A range may narrow a parameter's domain but may not widen it, and a range outside the domain is an error. The parameters that can be searched are firstEstimate, memoryLength, accuracyPercent, numberSensitivity and pConceptual. The default ranges are 0 to 1 in steps of 0.001 for the proportions, and 1 to the number of rows of data in steps of 1 for memoryLength, whose step cannot be changed. DEFAULT = c("firstEstimate", "accuracyPercent", "numberSensitivity").
+#' @param free The parameters the search varies. Either a character vector of parameter names, each searched over its whole domain at the default step, or a named list whose elements are `c(lower, upper)` or `c(lower, upper, step)`, each searched over the range given. Presence in `free` is what makes a parameter free; a parameter that is not named is held fixed at its own argument. A range may narrow a parameter's domain but may not widen it, and a range outside the domain is an error. The parameters that can be searched are firstEstimate, memoryLength, accuracyPercent, numberSensitivity and pConceptual. The domain and default range of numberSensitivity are -1 to 1, or 0 to 1 when every visible point is a bound, as on a bounded number line, because label use cannot be recovered from the estimates there. The default ranges are 0 to 1 in steps of 0.001 for the proportions, and 1 to the number of rows of data in steps of 1 for memoryLength, whose step cannot be changed. DEFAULT = c("firstEstimate", "accuracyPercent", "numberSensitivity").
 #' @param firstEstimate A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. If NULL, the midpoint of the region is used. Ignored, with a warning, when firstEstimate is named in `free`. DEFAULT = NULL
 #' @param accuracyPercent A proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding. Ignored, with a warning, when accuracyPercent is named in `free`. DEFAULT = 0
-#' @param numberSensitivity A proportion between 0 and 1 that specifies the range of equivelance. When numberSensitivity=1, every number is discriminated from every other. Ignored, with a warning, when numberSensitivity is named in `free`. DEFAULT = 1
+#' @param numberSensitivity A number between -1 and 1 that specifies the range of equivelance. When numberSensitivity=1, every number is discriminated from every other. Ignored, with a warning, when numberSensitivity is named in `free`. At or below 0, sensitivity, accuracyPercent and pConceptual act as 0. Below 0, each visible reference point is used on a trial with probability \code{1 + numberSensitivity}, so at -1 none is. DEFAULT = 1
 #' @param memoryLength An integer that specifies the number of previous estimates that are remembered. NULL is the number of rows of data, which is the package's default. Ignored, with a warning, when memoryLength is named in `free`. DEFAULT = NULL
-#' @param pConceptual A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is available on a run. Ignored, with a warning, when pConceptual is named in `free`. DEFAULT = 0
+#' @param pConceptual A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is used on a trial. Ignored, with a warning, when pConceptual is named in `free`. DEFAULT = 0
 #' @param search A string naming the effort the search is run at: "full", the effort a reported fit is run at, or "quick", which is small enough for an example and gives coarse estimates. DEFAULT = "full".
 #' @param control A named list overriding single search settings. It may name `loops` (the simulation runs the objective averages over), `finalLoops` (the runs the fit report is recomputed at), and any argument of `smartGridSearch()` other than the ones this function builds. An unrecognised name is an error. DEFAULT = list()
 #' @param targetOrder A string specifying whether to keep the order in targets fixed ("fixed"), to randomize the order for every iteration of the loop ("random"), or to randomize it once and then use that order for all the loops ("single"). Default is "random".
@@ -262,7 +270,8 @@ nlFit <- function(data, upperBound, lowerBound = 0,
 	nTargets <- nrow(data)
 
 	#which parameters the search varies, and over what
-	resolved <- nlFitResolveFree(free, nTargets)
+	resolved <- nlFitResolveFree(free, nTargets,
+								 nlHasLabel(visibleReferencePoints, lowerBound, upperBound))
 	freeNames <- names(resolved)
 	pars.n <- length(freeNames)
 
@@ -353,19 +362,9 @@ nlFit <- function(data, upperBound, lowerBound = 0,
 							dataEstimateCol = dataEstimateCol, pars.n = pars.n,
 							loops = finalLoops, sinkFilename = sinkFilename,
 							plotFileName = plotFileName,
-							dataPresentationCol = dataPresentationCol)
-
-	firstEstimateSE <- NA_real_
-	if("firstEstimate" %in% freeNames) {
-		firstEstimateSE <- nlFirstEstimateSE(statList, data, out$df.fitted,
-											 "accuracyPercent" %in% freeNames,
-											 dataTargetCol, dataEstimateCol,
-											 dataPresentationCol, finalLoops)
-		if(!is.null(sinkFilename)) {
-			cat(" First Estimate SE = ", firstEstimateSE, "\n",
-				file = sinkFilename, append = TRUE)
-		}
-	}
+							dataPresentationCol = dataPresentationCol,
+							free = freeNames)
+	firstEstimateSE <- out$runStats$fitStats$firstEstimateSE
 
 	parameterOrder <- nlFitParameterOrder()
 	parameters <- data.frame(

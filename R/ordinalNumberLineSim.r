@@ -96,11 +96,13 @@ ordinalNumberLineSim <- function(targets, parList, loops = 1000, verbose = FALSE
 		stop("ordinalNumberLineSim: parList must contain visibleReferencePoints. Pass the bounds for a bounded number line, or the labelled values for a universal number line.")
 	}
 
-	#a fixed or once-drawn target order still varies across loops when conceptual points
-	#are drawn in, so only collapse the loops when nothing is left to average over.
-	deterministicRun <- is.null(parList[["conceptualReferencePoints"]]) ||
+	#collapse the loops only when no draw is left to average over
+	conceptualFixed <- is.null(parList[["conceptualReferencePoints"]]) ||
 		(!is.null(parList[["pConceptual"]]) &&
-			(parList[["pConceptual"]] == 0 || parList[["pConceptual"]] == 1))
+			(nlEffectiveConceptual(parList[["numberSensitivity"]],
+								   parList[["pConceptual"]]) %in% c(0, 1)))
+	visibleP <- nlVisibleProbability(parList[["numberSensitivity"]])
+	deterministicRun <- conceptualFixed && (visibleP == 0 || visibleP == 1)
 
 	if(parList[["targetOrder"]] == "single")	{
 		targetSeq <- sample(targets)

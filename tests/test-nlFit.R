@@ -56,7 +56,7 @@ if(haveSGS) {
 
 ## a range may narrow a parameter's domain but not widen it. A proportion outside
 ## [0, 1] is rejected at both ends, and the message names the parameter.
-msg <- errorFrom(fitPerson(free = list(numberSensitivity = c(-0.5, 1))))
+msg <- errorFrom(fitPerson(free = list(numberSensitivity = c(-1.5, 1))))
 stopifnot(grepl("numberSensitivity", msg), grepl("domain", msg))
 msg <- errorFrom(fitPerson(free = list(pConceptual = c(0, 1.5))))
 stopifnot(grepl("pConceptual", msg), grepl("domain", msg))

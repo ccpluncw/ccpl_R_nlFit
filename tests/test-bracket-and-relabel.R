@@ -23,15 +23,15 @@ stopifnot(isTRUE(all.equal(
 ## are matched here, and the response is the mean of their values; bracketing
 ## above instead would put the equal row and the line's end together and give 80.
 stopifnot(isTRUE(all.equal(
-  bounded(c(80, 60, 80), memoryLength = 5, numberSensitivity = 0, accuracyPercent = 1,
+  bounded(c(80, 60, 80), memoryLength = 5, numberSensitivity = 1e-9, accuracyPercent = 1,
           visibleReferencePoints = c(0, 25, 100)),
   c(80, 80, 70))))
 
 ## the same rule at the top of the line: the target equals the upper bound, so the
 ## bound is the upper anchor and the remembered 80 the lower one
 stopifnot(isTRUE(all.equal(
-  bounded(c(80, 60, 100), memoryLength = 5, numberSensitivity = 0, accuracyPercent = 1,
-          visibleReferencePoints = c(0, 25, 100)),
+  bounded(c(80, 60, 100), memoryLength = 5, numberSensitivity = 1e-9, accuracyPercent = 1,
+          visibleReferencePoints = c(0, 25)),
   c(80, 80, 90))))
 
 ## A target past the end of the line relabels the bound, and the bound keeps the

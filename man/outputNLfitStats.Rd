@@ -17,7 +17,8 @@ outputNLfitStats(
   xlim = NULL,
   ylim = NULL,
   seed = NULL,
-  dataPresentationCol = "presentation"
+  dataPresentationCol = "presentation",
+  free = NULL
 )
 }
 \arguments{
@@ -43,13 +44,15 @@ outputNLfitStats(
 
 \item{ylim}{A vector of two numbers giving the y axis limits of the plot. When NULL, the limits span the bounds, the estimates in data, and the fitted estimates. Default is NULL.}
 
-\item{seed}{The random seed the caller set before running the fit. It is recorded in the output header so a run can be reproduced. The function does not set the seed itself. Default is NULL, whereby no seed is reported.
-'}
+\item{seed}{The random seed the caller set before running the fit. It is recorded in the output header so a run can be reproduced. The function does not set the seed itself. Default is NULL, whereby no seed is reported.}
 
 \item{dataPresentationCol}{A string that identifies the name of the column in data that numbers the occurrences of a repeated target value, counted in the order they were presented. When data has that column the simulation is matched to the data trial by trial, on target and presentation. When it does not, the simulated estimates are averaged over the presentations of each value and matched on target alone, which is what an averaged dataset needs. The default is "presentation".}
+
+\item{free}{A character vector naming the parameters the search varied. When it names firstEstimate, the standard error of firstEstimate is computed and written beside it in the report. It allows for the trade-off with accuracyPercent when \code{free} also names that. See nlFit() for the method. Default \code{NULL}, whereby no standard error is computed.
+'}
 }
 \value{
-The function returns a list containing (1) a list of the parameter values and fit statistics (\code{runStats}), and (2) a dataframe (\code{df.fitted}) that contains the "data" plus the fitted values from the model (fEst)). The function is silent unless it is given a file name: with no plotFileName it draws nothing, and with no sinkFilename it prints nothing.
+The function returns a list containing (1) a list of the parameter values and fit statistics (\code{runStats}), and (2) a dataframe (\code{df.fitted}) that contains the "data" plus the fitted values from the model (fEst)). The function is silent unless it is given a file name: with no plotFileName it draws nothing, and with no sinkFilename it prints nothing. The fit statistics in \code{runStats} include \code{firstEstimateSE}, the standard error of firstEstimate when \code{free} names it, \code{Inf} when the fit carries no information about it, and \code{NA} otherwise.
 }
 \description{
 Function that outputs the results of the fitNL analysis

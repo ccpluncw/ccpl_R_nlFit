@@ -22,7 +22,7 @@ u <- ordinalNumberLine(c(-0.8, 0.3, 1.4, -1.2, 0.8, -0.5), upperBound = 1, lower
                        targetOrder = "fixed")
 stopifnot(isTRUE(all.equal(u$fEst, c(-0.8, -0.165, 1, -1, 0.8, -0.725))))
 
-## conceptual points held with certainty are reference points like any other, and
+## conceptual points held with certainty anchor like visible points, and
 ## a short memory window drops the earliest estimates back out of the set
 cp <- ordinalNumberLine(c(60, 20, 90, 45, 75, 10), upperBound = 100, lowerBound = 0,
                         firstEstimate = NULL, memoryLength = 3, numberSensitivity = 1,

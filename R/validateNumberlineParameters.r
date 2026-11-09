@@ -29,7 +29,7 @@ validateNumberlineParameters <- function(parList) {
 	}
 
 	if(!is.null(parList[["numberSensitivity"]])) {
-		if(parList[["numberSensitivity"]] < 0 | parList[["numberSensitivity"]] > 1) out <- FALSE
+		if(parList[["numberSensitivity"]] < -1 | parList[["numberSensitivity"]] > 1) out <- FALSE
 	}
 
 	if(!is.null(parList[["firstEstimate"]])) {

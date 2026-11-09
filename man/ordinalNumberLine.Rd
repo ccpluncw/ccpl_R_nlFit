@@ -32,9 +32,9 @@ ordinalNumberLine(
 
 \item{accuracyPercent}{A proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  DEFAULT = 0}
 
-\item{numberSensitivity}{A proportion between 0 and 1 that specifies the range of equivelance. A number's range is scaled by its distance to the nearest reference point, so numbers near a landmark are discriminated finely and numbers far from one coarsely. When numberSensitivity=1, every number is discriminated from every other. When numberSensitivity=0, a number is not discriminated from anything within its distance to the nearest reference point. Two numbers are treated as the same when either one falls in the other's range; a target is compared to a reference point in one direction only, so labels stay perfectly discriminable. DEFAULT = 1 (perfect precision)}
+\item{numberSensitivity}{A number between -1 and 1 that specifies the range of equivelance. A number's range is scaled by its distance to the nearest reference point, so numbers near a landmark are discriminated finely and numbers far from one coarsely. When numberSensitivity=1, every number is discriminated from every other. When numberSensitivity=0, a number is not discriminated from anything within its distance to the nearest reference point. Two numbers are treated as the same when either one falls in the other's range; a target is compared to a reference point in one direction only, so labels stay perfectly discriminable. DEFAULT = 1 (perfect precision) At or below 0, sensitivity, accuracyPercent and pConceptual act as 0. Below 0, each visible reference point is used on a trial with probability \code{1 + numberSensitivity}, so at -1 none is.}
 
-\item{pConceptual}{A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is available on a run. Each conceptual point is drawn independently, once per run, and is then present on every trial of that run. Because the drawn points enter the reference set, this probability moves the estimates through two channels: which anchors are available and how wide each target's range of equivalence is.  DEFAULT = 0}
+\item{pConceptual}{A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is used on a trial. Each conceptual point is drawn independently on every trial. A conceptual point used on a trial anchors that trial but does not set its range of equivalence. It acts as 0 at or below a numberSensitivity of 0. DEFAULT = 0}
 
 \item{visibleReferencePoints}{A vector of numbers that specify the visible (displayed) points that identify the value of positions on the number line. In the bounded task these are the upper and lower bound; in the universal task they are the labelled values and the bounds are the screen edges. This is required; there is no default.}
 
@@ -50,6 +50,9 @@ A dataframe with one row per trial, in the order the trials were presented, cont
 }
 \description{
 Function that simulates the numberLine process and return the predited estimates.
+}
+\details{
+The reference points are drawn on every trial. Only the visible points used on a trial set its range of equivalence, scaled to the nearest one, or to the length of the response region when none is used. Conceptual points are anchors only. A point not used on a trial is not a reference point on that trial, although a bound remains a response limit.
 The participant places each target ordinally in relation to the previous estimates and the
 reference points. A target that is not bracketed by a remembered estimate is placed in the
 region between its two reference points using firstEstimate; every other target is placed
@@ -59,8 +62,7 @@ which specifies how finely numbers near a reference point are discriminated. Fin
 accuracyPercent specifies the influence of accuracy on the estimates.  This is a proportion,
 between 0 and 1, whereby estimate is calculated as follows:
 estimate = (estimate based on algroithm * 1-accuracyPercent) + presented target * accuracyPercent
-}
-\details{
+
 This is one run of the task. Use ordinalNumberLineSim() to average the estimates over many runs.
 }
 \examples{

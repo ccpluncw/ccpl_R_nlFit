@@ -14,8 +14,9 @@
 #' @param xlim A vector of two numbers giving the x axis limits of the plot. When NULL, the limits span the bounds and the targets in data. Default is NULL.
 #' @param ylim A vector of two numbers giving the y axis limits of the plot. When NULL, the limits span the bounds, the estimates in data, and the fitted estimates. Default is NULL.
 #' @param seed The random seed the caller set before running the fit. It is recorded in the output header so a run can be reproduced. The function does not set the seed itself. Default is NULL, whereby no seed is reported.
+#' @param free A character vector naming the parameters the search varied. When it names firstEstimate, the standard error of firstEstimate is computed and written beside it in the report. It allows for the trade-off with accuracyPercent when \code{free} also names that. See nlFit() for the method. Default \code{NULL}, whereby no standard error is computed.
 #''
-#' @return The function returns a list containing (1) a list of the parameter values and fit statistics (`runStats`), and (2) a dataframe (`df.fitted`) that contains the "data" plus the fitted values from the model (fEst)). The function is silent unless it is given a file name: with no plotFileName it draws nothing, and with no sinkFilename it prints nothing.
+#' @return The function returns a list containing (1) a list of the parameter values and fit statistics (`runStats`), and (2) a dataframe (`df.fitted`) that contains the "data" plus the fitted values from the model (fEst)). The function is silent unless it is given a file name: with no plotFileName it draws nothing, and with no sinkFilename it prints nothing. The fit statistics in \code{runStats} include \code{firstEstimateSE}, the standard error of firstEstimate when \code{free} names it, \code{Inf} when the fit carries no information about it, and \code{NA} otherwise.
 #' @keywords ordinalNumberline fit statistics
 #' @export
 #' @importFrom grDevices pdf dev.off
@@ -30,7 +31,7 @@
 #'                  conceptualReferencePoints = NULL, targetOrder = "fixed")
 #' outputNLfitStats(df, statList, pars.n = 3, loops = 10)
 
-outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstimateCol = "estimate", pars.n, loops = 1000, sinkFilename = NULL, appendSinkFile = TRUE, plotFileName = NULL, xlim = NULL, ylim = NULL, seed = NULL, dataPresentationCol = "presentation") {
+outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstimateCol = "estimate", pars.n, loops = 1000, sinkFilename = NULL, appendSinkFile = TRUE, plotFileName = NULL, xlim = NULL, ylim = NULL, seed = NULL, dataPresentationCol = "presentation", free = NULL) {
 
 	if(missing(pars.n) || is.null(pars.n)) {
 		stop("outputNLfitStats: pars.n is required. Set it to the number of parameters the search varied.")
@@ -46,6 +47,14 @@ outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstim
 	fit.r2 <- round(chutils::ch.R2(df.fitted[[dataEstimateCol]], df.fitted[["fEst"]]),2)
 	fit.BIC <- round(chutils::ch.IC(df.fitted[[dataEstimateCol]], df.fitted[["fEst"]], pars.n, ICtype = "BIC"), 0)
 	fit.AIC <- round(chutils::ch.IC(df.fitted[[dataEstimateCol]], df.fitted[["fEst"]], pars.n, ICtype = "AIC"), 0)
+
+	firstEstimateSE <- NA_real_
+	if("firstEstimate" %in% free) {
+		firstEstimateSE <- nlFirstEstimateSE(statList, data, df.fitted,
+											 "accuracyPercent" %in% free,
+											 dataTargetCol, dataEstimateCol,
+											 dataPresentationCol, loops)
+	}
 
 	if(is.null(xlim)) xlim <- c(min(statList$lowerBound, data[[dataTargetCol]]), max(statList$upperBound, data[[dataTargetCol]]))
 	if(is.null(ylim)) ylim <- c(min(statList$lowerBound, data[[dataEstimateCol]], df.fitted$fEst), max(statList$upperBound, data[[dataEstimateCol]], df.fitted$fEst))
@@ -88,7 +97,8 @@ outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstim
 
     cat("\n\n ******** Parameter Values ******** \n\n")
 
-    cat("First Estimate = ", statList$firstEstimate, "\n\n")
+    cat("First Estimate = ", statList$firstEstimate,
+		if(!is.na(firstEstimateSE)) paste0("(SE = ", round(firstEstimateSE, 3), ")"), "\n\n")
     cat("Memory Length = ", statList$memoryLength, "\n\n")
     cat("Number Sensitivity = ", statList$numberSensitivity, "\n\n")
     cat("Accuracy Percent = ", statList$accuracyPercent, "\n\n")
@@ -106,7 +116,8 @@ outputNLfitStats <- function(data, statList, dataTargetCol = "target", dataEstim
   }
 
 
-  fitStats <- list(AIC = fit.AIC, BIC = fit.BIC, r2 = fit.r2, freeParameters = pars.n)
+  fitStats <- list(AIC = fit.AIC, BIC = fit.BIC, r2 = fit.r2, freeParameters = pars.n,
+				   firstEstimateSE = firstEstimateSE)
 
   runStats <- list(parameters = statList, fitStats = fitStats)
 
