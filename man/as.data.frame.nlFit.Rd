@@ -9,9 +9,9 @@
 \arguments{
 \item{x}{An object of class "nlFit".}
 
-\item{row.names}{A row name for the returned row, or NULL. Default is NULL.}
+\item{row.names}{A row name for the returned row, or NULL. Default \code{NULL}.}
 
-\item{optional}{Ignored; present for consistency with the generic. Default is FALSE.}
+\item{optional}{Ignored; present for consistency with the generic. Default \code{FALSE}.}
 
 \item{...}{Further arguments, ignored.
 '}

@@ -1,10 +1,4 @@
-## nlFit() wraps the objective, the search and the fit report in one call. What it
-## has to get right before any of that runs is the bookkeeping: which parameters
-## are free, whether the ranges it was handed are inside the domains of the model,
-## and whether the settings it was handed are settings at all. The search itself is
-## in a Suggests package, so every test that needs one is skipped when it is
-## absent. The search tests run at the "quick" preset with the effort cut further,
-## because what is under test is the wiring, not the precision of the estimates.
+#free, domains and control are checked, the search tests need smartGridSearch2
 library(nlFit)
 
 haveSGS <- requireNamespace("smartGridSearch2", quietly = TRUE)
@@ -14,8 +8,7 @@ errorFrom <- function(expr) tryCatch({ force(expr); NA_character_ },
 warningFrom <- function(expr) tryCatch({ force(expr); NA_character_ },
 									   warning = function(w) conditionMessage(w))
 
-## a participant simulated from the model, so the search has something with a
-## recoverable answer in it
+#a participant simulated from the model, so the answer is recoverable
 truth <- list(upperBound = 100, lowerBound = 0,
 			  visibleReferencePoints = c(5, 50), firstEstimate = 0.35,
 			  accuracyPercent = 0.45, numberSensitivity = 0.75,
@@ -27,8 +20,7 @@ sim <- ordinalNumberLineSim(c(3, 6, 8, 10, 13, 15, 18, 22, 26, 30,
 person <- data.frame(target = sim$target,
 					 estimate = round(pmin(pmax(sim$fEst + rnorm(nrow(sim), 0, 3), 0), 100), 1))
 
-## the settings that make a test finish in seconds. They are far below anything a
-## reported fit would use.
+#settings that finish in seconds, far below anything a reported fit would use
 tiny <- list(multicore = FALSE, numLoops = 12, numIntervals = 8,
 			 optParamListN = 3, optBoundLoops = 1, loops = 10, finalLoops = 10)
 
@@ -38,10 +30,7 @@ fitPerson <- function(control = tiny, ...) {
 }
 
 
-## ---- the search package is named, not assumed --------------------------------
-
-## without smartGridSearch2 there is no search, so the call has to say how to get
-## it rather than failing somewhere inside. Nothing else in this file can run.
+#without smartGridSearch2 the call has to say how to get it
 if(!haveSGS) {
 	message("smartGridSearch2 is not installed: the search tests are skipped.")
 	msg <- errorFrom(nlFit(person, upperBound = 100, lowerBound = 0,
@@ -52,62 +41,48 @@ if(!haveSGS) {
 
 if(haveSGS) {
 
-## ---- what free will and will not accept --------------------------------------
-
-## a range may narrow a parameter's domain but not widen it. A proportion outside
-## [0, 1] is rejected at both ends, and the message names the parameter.
+#a range may narrow a domain but not widen it, the error names the parameter
 msg <- errorFrom(fitPerson(free = list(numberSensitivity = c(-1.5, 1))))
 stopifnot(grepl("numberSensitivity", msg), grepl("domain", msg))
 msg <- errorFrom(fitPerson(free = list(pConceptual = c(0, 1.5))))
 stopifnot(grepl("pConceptual", msg), grepl("domain", msg))
 
-## memoryLength counts remembered estimates, so a fractional bound is not a
-## narrower range, it is a different kind of number
+#memoryLength counts estimates, so a fractional bound is an error
 msg <- errorFrom(fitPerson(free = list(memoryLength = c(1.5, 10))))
 stopifnot(grepl("memoryLength", msg), grepl("whole numbers", msg))
 
-## its step is a property of the model and is not the caller's to set
+#its step is a property of the model and is not the caller's to set
 msg <- errorFrom(fitPerson(free = list(memoryLength = c(1, 10, 2))))
 stopifnot(grepl("memoryLength", msg), grepl("step", msg))
 
-## a range longer than the target set is outside the domain too
+#a range longer than the target set is outside the domain too
 msg <- errorFrom(fitPerson(free = list(memoryLength = c(1, nrow(person) + 5))))
 stopifnot(grepl("memoryLength", msg), grepl("domain", msg))
 
-## a name the model has no parameter for
+#a name the model has no parameter for
 msg <- errorFrom(fitPerson(free = c("firstEstimate", "slope")))
 stopifnot(grepl("slope", msg))
 
-## nothing to search is not an empty search, it is a different function
+#nothing to search is not an empty search, it is a different function
 stopifnot(grepl("nothing to fit", errorFrom(fitPerson(free = character(0)))),
 		  grepl("nothing to fit", errorFrom(fitPerson(free = NULL))))
 
 
-## ---- what control will and will not accept -----------------------------------
-
-## a setting the search does not have is a typo, and a typo that is dropped
-## silently is a fit run at settings the caller did not ask for
+#a dropped typo would be a fit at settings the caller did not ask for
 msg <- errorFrom(fitPerson(control = list(numLoops = 12, numLops = 40)))
 stopifnot(grepl("numLops", msg), grepl("not a search setting", msg))
 
-## the two loop counts are settings of this function rather than of the search,
-## and both are accepted
+#the two loop counts are settings of this function and both are accepted
 stopifnot(all(c("loops", "finalLoops", "numLoops", "multicore") %in%
 			  nlFit:::nlFitControlNames()))
 
 
-## ---- a parameter cannot be both searched and given ---------------------------
-
-## the searched value would overwrite the given one, and a caller reading the
-## result would take the returned value for the one they set
+#a caller would take the searched value for the one they set, so it warns
 msg <- warningFrom(fitPerson(free = c("accuracyPercent"), accuracyPercent = 0.4))
 stopifnot(grepl("accuracyPercent", msg), grepl("ignored", msg))
 
 
-## ---- pars.n is counted, never supplied ---------------------------------------
-
-## the number of free parameters is what the information criteria are penalised
-## by, so it has to follow free in both of free's forms
+#pars.n sets the information criteria penalty, so it follows free in both forms
 fitVector <- fitPerson(free = c("firstEstimate", "accuracyPercent"))
 stopifnot(fitVector$fitStats$pars.n == 2,
 		  sum(fitVector$parameters$free) == 2,
@@ -120,42 +95,34 @@ fitList <- fitPerson(free = list(firstEstimate = c(0, 1),
 stopifnot(fitList$fitStats$pars.n == 3,
 		  sum(fitList$parameters$free) == 3)
 
-## a narrowed range is the range that was searched, and it is reported as such
+#a narrowed range is the range that was searched, and it is reported as such
 searched <- fitList$parameters[fitList$parameters$parameter == "accuracyPercent", ]
 stopifnot(searched$lower == 0.2, searched$upper == 0.8,
 		  searched$value >= 0.2, searched$value <= 0.8)
 
-## a fixed parameter has no range, and memoryLength left alone is the number of
-## rows fitted
+#a fixed parameter has no range, and a default memoryLength is the rows fitted
 fixed <- fitList$parameters[fitList$parameters$parameter == "memoryLength", ]
 stopifnot(!fixed$free, is.na(fixed$lower), is.na(fixed$upper), fixed$value == nrow(person))
 
 
-## ---- a fixed value outside its domain stops before the search ----------------
-
+#a fixed value outside its domain stops before the search
 msg <- errorFrom(fitPerson(free = c("firstEstimate"), numberSensitivity = 1.4))
 stopifnot(grepl("numberSensitivity", msg))
 
 
-## ---- one row per fit ---------------------------------------------------------
-
+#one row per fit
 row <- as.data.frame(fitList)
 stopifnot(nrow(row) == 1,
 		  all(c("firstEstimate", "memoryLength", "accuracyPercent", "numberSensitivity",
 				"pConceptual", "r2", "BIC", "AIC", "pars.n") %in% names(row)),
 		  nrow(rbind(as.data.frame(fitVector), row)) == 2)
 
-## the object carries the fitted values and prints without error
+#the object carries the fitted values and prints without error
 stopifnot(nrow(fitList$fitted) == nrow(person), "fEst" %in% names(fitList$fitted))
 invisible(capture.output(print(fitList)))
 
 
-## ---- the reported fit is the fit of the reported parameters ------------------
-
-## with a fixed target order and no conceptual points the simulation is
-## deterministic, so the fit report can be recomputed by hand and has to agree to
-## the digit. outputNLfitStats' own seed argument records the draw; it is passed
-## here only so the comparison names the run it is comparing against.
+#a deterministic fit recomputed by hand must match the report to the digit
 fitFixed <- nlFit(person, upperBound = 100, lowerBound = 0,
 				  visibleReferencePoints = c(5, 50),
 				  free = c("firstEstimate", "accuracyPercent"),
@@ -178,12 +145,7 @@ stopifnot(byHand$runStats$fitStats$r2 == fitFixed$fitStats$r2,
 		  fitFixed$fitStats$n == nrow(person))
 
 
-## ---- the search finds the participant it was given ---------------------------
-
-## a participant generated from the model with no noise, at a fixed target order
-## and with one parameter free, has an answer the search can land on exactly. The
-## objective is deterministic here, so this is a check that the bounds, the
-## objective and the reported value all describe the same parameter.
+#noiseless, deterministic, one free parameter: the search lands on the answer
 exactPars <- list(upperBound = 100, lowerBound = 0, visibleReferencePoints = c(5, 50),
 				  firstEstimate = 0.2, accuracyPercent = 0, numberSensitivity = 1,
 				  targetOrder = "fixed")
@@ -202,11 +164,7 @@ stopifnot(abs(exactFit$parameters$value[1] - exactPars$firstEstimate) < 0.1,
 		  exactFit$fitStats$r2 > 0.99,
 		  exactFit$fitStats$pars.n == 1)
 
-## with three parameters free and noise on the estimates the parameters trade off
-## against one another, so the values the search returns are not the values the
-## data were generated at. What has to hold is that the search did its job: the
-## set it returns scores no worse under the objective than the set the data came
-## from, and the fit it reports is the fit of that set.
+#parameters trade off under noise, so the search need only score no worse
 recovered <- nlFit(person, upperBound = 100, lowerBound = 0,
 				   visibleReferencePoints = c(5, 50), search = "quick",
 				   control = list(multicore = FALSE, numLoops = 30, numIntervals = 12,

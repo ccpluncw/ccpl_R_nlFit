@@ -1,13 +1,10 @@
-# where each presented trial's estimate belongs in the (value, presentation)
-# output. rowStart is the offset of each distinct value's block of rows.
+#where each trial's estimate belongs, rowStart is each value's block offset
 nlOutputRow <- function(presented, uniqueValues, rowStart) {
 	rowStart[match(presented, uniqueValues)] + nlPresentationIndex(presented)
 }
 
 
-# the targets are numbers the participant places on a line, so anything the
-# process cannot order or average is caught here rather than part way through a
-# trial. An empty set of targets is allowed and gives an empty result.
+#reject targets that cannot be ordered, an empty set gives an empty result
 nlCheckTargets <- function(targets) {
 	if(!is.numeric(targets)) {
 		stop("nlFit: targets must be numeric, not ", class(targets)[1], ".")
@@ -19,8 +16,7 @@ nlCheckTargets <- function(targets) {
 }
 
 
-# the data a fit is scored against needs rows, and the two columns the score is
-# computed from have to be numbers.
+#the fit needs rows and numeric target and estimate columns
 nlCheckFitData <- function(data, dataTargetCol, dataEstimateCol) {
 	if(is.null(nrow(data)) || nrow(data) < 1) {
 		stop("nlFit: data has no rows, so there is nothing to fit.")
@@ -35,10 +31,7 @@ nlCheckFitData <- function(data, dataTargetCol, dataEstimateCol) {
 }
 
 
-# the simulation numbers the presentations of a repeated target 1..k in the order
-# the rows are given, so a trial-level dataframe that numbers them any other way
-# loses rows in the join. A fit computed on part of the data, or on none of it, is
-# an error rather than a score a search can compare, so say so and stop.
+#misnumbered presentations lose rows in the join, and a partial fit is an error
 nlStopOnUnmatchedTrials <- function(matched, supplied, dataPresentationCol) {
 	if(matched >= supplied) return(invisible(NULL))
 	stop("nlFit: ", supplied - matched, " of ", supplied,
@@ -61,8 +54,8 @@ nlStopOnUnmatchedTrials <- function(matched, supplied, dataPresentationCol) {
 #'
 #' @param targets A vector of numbers that are the to-be-estimated values. A value may appear more than once.
 #' @param parList A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. upperBound and visibleReferencePoints have no default and must be present. firstEstimate, memoryLength and conceptualReferencePoints may be absent or NULL, which is their default. lowerBound, numberSensitivity, accuracyPercent, pConceptual and targetOrder are filled with their defaults by fillNumberlineParList() when they are absent.
-#' @param loops A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution. Loops are collapsed to 1 when the run is deterministic, that is, when the target order is fixed or drawn once and there is no conceptual-point inclusion draw to average over.  Default = 1000.
-#' @param verbose A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.
+#' @param loops A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution. Loops are collapsed to 1 when the run is deterministic, that is, when the target order is fixed or drawn once and there is no conceptual-point inclusion draw to average over.  Default \code{1000}.
+#' @param verbose A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default \code{FALSE}.
 #''
 #' @return A dataframe with one row per (target value, presentation) containing the target value (target), the mean predicted estimate over the loops (fEst), and the occurrence number of that value within a run (presentation).
 #' @keywords ordinalNumberline ordinal number-line
@@ -82,13 +75,10 @@ ordinalNumberLineSim <- function(targets, parList, loops = 1000, verbose = FALSE
 
 	nlCheckTargets(targets)
 
-	#a parameter that has a default is filled here rather than left to fail inside
-	#the trial loop
+	#fill the defaults here rather than fail inside the trial loop
 	parList <- fillNumberlineParList(parList)
 
-	#the bounds and the reference points have no defaults: the bounds are the ends
-	#of the line the participant responds on, and the reference points define its
-	#regions and set the scale of the equivalence ranges.
+	#no defaults: the bounds end the line, the reference points set its scale
 	if(is.null(parList[["upperBound"]])) {
 		stop("ordinalNumberLineSim: parList must contain upperBound. Pass the upper end of the number line, or the upper screen edge for a universal number line.")
 	}
@@ -114,8 +104,7 @@ ordinalNumberLineSim <- function(targets, parList, loops = 1000, verbose = FALSE
 		loops <- 1
 	}
 
-	#every run presents the same multiset of targets, so the output rows are fixed
-	#before the loops start: one row per distinct value per presentation of it.
+	#every run has the same multiset, so the rows are fixed before the loops
 	uniqueValues <- sort(unique(targetSeq))
 	multiplicity <- tabulate(match(targetSeq, uniqueValues), nbins = length(uniqueValues))
 	rowStart <- cumsum(multiplicity) - multiplicity
@@ -137,7 +126,7 @@ ordinalNumberLineSim <- function(targets, parList, loops = 1000, verbose = FALSE
 		estimates[nlOutputRow(run$targets, uniqueValues, rowStart), lps] <- run$estimate
 	}
 
-	#keep a target whose estimates are all NA rather than dropping it from the output
+	#keep a target whose estimates are all NA rather than drop it
 	data.frame(target = rep(uniqueValues, multiplicity),
 			   fEst = rowMeans(estimates, na.rm = TRUE),
 			   presentation = sequence(multiplicity))

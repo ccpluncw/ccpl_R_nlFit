@@ -30,38 +30,38 @@ getOrdinalNumberlineFit(
 
 \item{upperBound}{A number that identifes the upper point beyond which the partcipant cannot respond. In the bounded task this is the upper end of the number line and is also passed as a visible reference point. In the universal task it is the upper screen edge.}
 
-\item{lowerBound}{A number that identifes the lower point beyond which the partcipant cannot respond. In the bounded task this is the lower end of the number line and is also passed as a visible reference point. In the universal task it is the lower screen edge. DEFAULT = 0.}
+\item{lowerBound}{A number that identifes the lower point beyond which the partcipant cannot respond. In the bounded task this is the lower end of the number line and is also passed as a visible reference point. In the universal task it is the lower screen edge. Default \code{0}.}
 
-\item{firstEstimate}{A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. 0 places the estimate at the bottom of the region between the two anchors, 1 at the top.  If NULL, the midpoint of the region is used.  DEFAULT = NULL}
+\item{firstEstimate}{A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. 0 places the estimate at the bottom of the region between the two anchors, 1 at the top.  If NULL, the midpoint of the region is used.  Default \code{NULL}.}
 
-\item{memoryLength}{An integer that specifies the number of previous estimates that are remembered. On trial t the remembered set is the estimates from trials t-memoryLength through t-1, plus every reference point. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). DEFAULT = length(targets).}
+\item{memoryLength}{An integer that specifies the number of previous estimates that are remembered. On trial t the remembered set is the estimates from trials t-memoryLength through t-1, plus every reference point. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). Default \code{length(targets)}.}
 
-\item{accuracyPercent}{a proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  DEFAULT = 0}
+\item{accuracyPercent}{a proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  Default \code{0}.}
 
-\item{numberSensitivity}{A number between -1 and 1 that specifies the range of equivelance. A number's range is scaled by its distance to the nearest reference point. When numberSensitivity=1, every number is discriminated from every other. When numberSensitivity=0, a number is not discriminated from anything within its distance to the nearest reference point. DEFAULT = 1 (perfect precision) At or below 0, sensitivity, accuracyPercent and pConceptual act as 0. Below 0, each visible reference point is used on a trial with probability \code{1 + numberSensitivity}, so at -1 none is.}
+\item{numberSensitivity}{A number between -1 and 1 that specifies the range of equivelance. A number's range is scaled by its distance to the nearest reference point. When numberSensitivity=1, every number is discriminated from every other. When numberSensitivity=0, a number is not discriminated from anything within its distance to the nearest reference point. Default \code{1} (perfect precision). At or below 0, sensitivity, accuracyPercent and pConceptual act as 0. Below 0, each visible reference point is used on a trial with probability \code{1 + numberSensitivity}, so at -1 none is.}
 
-\item{pConceptual}{A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is used on a trial. Each conceptual point is drawn independently on every trial. A conceptual point used on a trial anchors that trial but does not set its range of equivalence. It acts as 0 at or below a numberSensitivity of 0. DEFAULT = 0}
+\item{pConceptual}{A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is used on a trial. Each conceptual point is drawn independently on every trial. A conceptual point used on a trial anchors that trial but does not set its range of equivalence. It acts as 0 at or below a numberSensitivity of 0. Default \code{0}.}
 
 \item{visibleReferencePoints}{A vector of numbers that specify the visible (displayed) points that identify the value of positions on the number line. In the bounded task these are the upper and lower bound; in the universal task they are the labelled values and the bounds are the screen edges. This is required; there is no default.}
 
-\item{conceptualReferencePoints}{A vector of numbers that specify any conceptual points that the participant may use to identify the value of positions on the number line. These may be the middle of the bounded number-line, or a learned position on the number_line. Currently, conceptualReferencePoints are only modeled if they are used thoughout the task (not introduced part of the way through) Default is NULL.}
+\item{conceptualReferencePoints}{A vector of numbers that specify any conceptual points that the participant may use to identify the value of positions on the number line. These may be the middle of the bounded number-line, or a learned position on the number_line. Currently, conceptualReferencePoints are only modeled if they are used thoughout the task (not introduced part of the way through) Default \code{NULL}.}
 
-\item{loops}{A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution.  Default is 1000.}
+\item{loops}{A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution.  Default \code{1000}.}
 
-\item{targetOrder}{A string specifying whether to keep the order in targets fixed ("fixed"), to ranndomize the order for every iteration of the loop ("random"), or to randomize it once and then use that order for all the loops ("single").  Default is "random".}
+\item{targetOrder}{A string specifying whether to keep the order in targets fixed ("fixed"), to ranndomize the order for every iteration of the loop ("random"), or to randomize it once and then use that order for all the loops ("single").  Default \code{"random"}.}
 
-\item{dataTargetCol}{A string that identifies the name of the column in data that contains the target values. The default is "target"}
+\item{dataTargetCol}{A string that identifies the name of the column in data that contains the target values. Default \code{"target"}.}
 
-\item{dataEstimateCol}{A string that identifies the name of the column in data that contains the participant's estimate values. The default is "estimate"}
+\item{dataEstimateCol}{A string that identifies the name of the column in data that contains the participant's estimate values. Default \code{"estimate"}.}
 
-\item{minimizeStat}{A string that specifies which statistic to minimize when optimizing the model fit.  The options are: "BIC" , "AIC" , or "R_Square". Default is "BIC".}
+\item{minimizeStat}{A string that specifies which statistic to minimize when optimizing the model fit.  The options are: "BIC" , "AIC" , or "R_Square". Default \code{"BIC"}.}
 
 \item{pars.n}{The number of free parameters, that is, the number of parameters the search varies. This is required; there is no default.}
 
-\item{verbose}{A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.
+\item{verbose}{A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default \code{FALSE}.
 '}
 
-\item{dataPresentationCol}{A string that identifies the name of the column in data that numbers the occurrences of a repeated target value, counted in the order they were presented. When data has that column the simulation is matched to the data trial by trial, on target and presentation. When it does not, the simulated estimates are averaged over the presentations of each value and matched on target alone, which is what an averaged dataset needs. The default is "presentation".}
+\item{dataPresentationCol}{A string that identifies the name of the column in data that numbers the occurrences of a repeated target value, counted in the order they were presented. When data has that column the simulation is matched to the data trial by trial, on target and presentation. When it does not, the simulated estimates are averaged over the presentations of each value and matched on target alone, which is what an averaged dataset needs. Default \code{"presentation"}.}
 }
 \value{
 The minimization statistic for the fit of the model to the data.  This is the value that will be miniized by the optimization program.

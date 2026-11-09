@@ -1,23 +1,7 @@
-# Internal machinery for the trial-by-trial simulation.
-#
-# The remembered set is a list of plain numeric vectors held in value order, so a
-# trial costs a handful of vector operations rather than a data-frame subset. The
-# fields are:
-#   value     the number the row occupies on the line (a bound can be relabelled)
-#   label     the number the row stands for, used by the accuracy component
-#   estimate  where the row sits in space
-#   low, high the ends of the row's range of equivalent numbers
-#   trial     the trial the row came from; 0 marks a reference point
-#   key       the row's position in the caller's data, which breaks ties in value
-# value and label move together and differ only if a caller hands getEstimateNL()
-# two different columns for them.
-#
-# Each theoretical step of the model is one helper below and the trial loop in
-# nlRunTrials() is the sequence of those steps.
+#store: vectors in value order, trial 0 is a reference, key breaks value ties
 
 
-# the remembered set: every reference point plus the estimates from the last
-# memoryLength trials.
+#the remembered set: every reference point plus the last memoryLength estimates
 nlRememberedSet <- function(mem, trialNumber, memoryLength) {
 	lowEdge <- trialNumber - memoryLength
 	#nothing has dropped out yet, so the whole store is the remembered set
@@ -27,24 +11,14 @@ nlRememberedSet <- function(mem, trialNumber, memoryLength) {
 }
 
 
-# the anchors: the remembered values immediately below and above the target. The
-# nearest remembered value by absolute distance is found first, taking the first
-# of any duplicates so the earlier trial wins a tie, and a target equal to a
-# remembered value brackets with the item below it.
-#
-# A target at or beyond a bound has no remembered value on that side. The bound
-# is then relabelled to the target, that is, the participant treats the end of
-# the line as that number. The relabel moves the value and the label only: the
-# bound's estimate and its range of equivalent numbers stay where they were, so a
-# relabelled bound can never satisfy an equivalence test. The two guards are not
-# symmetric - the low one also fires when the target equals the lower bound, the
-# high one does not fire when the target equals the upper bound.
+#find the nearest value, earlier trial first, an equal target brackets below
 nlBracket <- function(rem, target) {
 	adjacent <- which.min(abs(rem$value - target))
 	nRemembered <- length(rem$value)
 	relabel <- NULL
 
 	lowIdx <- if(target > rem$value[adjacent]) adjacent else adjacent - 1L
+	#no remembered value below: relabel value and label, not estimate or range
 	if(lowIdx < 1L) {
 		lowIdx <- 1L
 		relabel <- rem$value[adjacent]
@@ -53,6 +27,7 @@ nlBracket <- function(rem, target) {
 	}
 
 	highIdx <- if(target > rem$value[adjacent]) adjacent + 1L else adjacent
+	#unlike the low guard this one does not fire at equality with the bound
 	if(highIdx > nRemembered) {
 		highIdx <- nRemembered
 		relabel <- rem$value[adjacent]
@@ -64,12 +39,7 @@ nlBracket <- function(rem, target) {
 }
 
 
-# a relabelled bound keeps its new value for the rest of the run, so the relabel
-# is written back to the store and the store is put back into value order. Only
-# reference rows are written back: when the extreme remembered row is a trial row
-# rather than a bound, the new value holds for this trial's placement but is not
-# remembered, and it is the reference point that shares its value, if there is
-# one, that keeps the relabel.
+#relabel reference rows only, a relabelled trial row holds for this trial alone
 nlRelabelReference <- function(mem, fromValue, toValue) {
 	hit <- mem$trial == 0 & mem$value == fromValue
 	if(!any(hit)) return(mem)
@@ -80,16 +50,9 @@ nlRelabelReference <- function(mem, fromValue, toValue) {
 }
 
 
-# the target and an anchor are treated as the same number when the target falls
-# inside the anchor's range of equivalent numbers, or, for a remembered estimate,
-# when the anchor's value falls inside the target's range. Each number therefore
-# keeps its own resolution and the comparison does not depend on which was seen
-# first. A reference point is always discriminable from the target, so the
-# reverse test skips reference rows.
-#
-# Matching one anchor collapses both anchors onto it. Matching both leaves the
-# anchors alone and aims the accuracy component at the mean of their labels.
+#either number in the other's range matches, whichever was seen first
 nlEquivalence <- function(rem, lowIdx, highIdx, target, targetLabel, targetLow, targetHigh) {
+	#a reference point is always discriminable, so the reverse test skips it
 	sameNumber <- function(i) {
 		(target >= rem$low[i] && target <= rem$high[i]) ||
 			(rem$trial[i] > 0 && rem$value[i] >= targetLow && rem$value[i] <= targetHigh)
@@ -97,6 +60,7 @@ nlEquivalence <- function(rem, lowIdx, highIdx, target, targetLabel, targetLow, 
 	hitLow <- sameNumber(lowIdx)
 	hitHigh <- sameNumber(highIdx)
 
+	#one hit collapses the anchors, two aim accuracy at the mean of the labels
 	if(hitLow && !hitHigh) highIdx <- lowIdx
 	if(!hitLow && hitHigh) lowIdx <- highIdx
 
@@ -109,9 +73,7 @@ nlEquivalence <- function(rem, lowIdx, highIdx, target, targetLabel, targetLow, 
 }
 
 
-# where in the region between the anchors the target lands. With no remembered
-# estimate bracketing it - both anchors are reference points - firstEstimate sets
-# the position; otherwise the target lands midway between the two anchors.
+#firstEstimate places a target with no remembered anchor, others land midway
 nlPlacement <- function(rem, lowIdx, highIdx, firstEstimate) {
 	eLow <- rem$estimate[lowIdx]
 	eHigh <- rem$estimate[highIdx]
@@ -121,8 +83,7 @@ nlPlacement <- function(rem, lowIdx, highIdx, firstEstimate) {
 }
 
 
-# the response: the ordinal placement blended with accurate responding, then held
-# inside the bounds.
+#ordinal placement blended with accurate responding, held inside the bounds
 nlResponse <- function(placement, accuracyTarget, accuracyPercent, lowerBound, upperBound) {
 	response <- placement * (1 - accuracyPercent) + (accuracyTarget * accuracyPercent)
 	if(response > upperBound) upperBound
@@ -131,8 +92,7 @@ nlResponse <- function(placement, accuracyTarget, accuracyPercent, lowerBound, u
 }
 
 
-# the new estimate joins the store at its rank: after any earlier trial that
-# shares its value and before any reference point that does.
+#a new estimate goes after earlier equal trials, before an equal reference
 nlRemember <- function(mem, value, label, estimate, low, high, trial, key) {
 	at <- sum(mem$value < value) + sum(mem$value == value & mem$key < key)
 	list(value = append(mem$value, value, after = at),
@@ -145,8 +105,7 @@ nlRemember <- function(mem, value, label, estimate, low, high, trial, key) {
 }
 
 
-# the reference points as a remembered-set store. The bounds are reference points
-# too, and are added only when they are not already visible.
+#reference store: the bounds are added unless they are already visible
 nlReferenceStore <- function(lowerBound, upperBound, visibleReferencePoints, conceptualIncluded, keyOffset) {
 	bounds <- c(lowerBound, upperBound)
 	values <- c(bounds[!(bounds %in% visibleReferencePoints)], visibleReferencePoints)
@@ -161,8 +120,7 @@ nlReferenceStore <- function(lowerBound, upperBound, visibleReferencePoints, con
 }
 
 
-# the store built from a data frame of reference rows, for callers that supply
-# their own reference estimates and ranges.
+#store from reference rows, where a caller's label may differ from its value
 nlStoreFromRows <- function(value, label, estimate, low, high, trial, key) {
 	o <- order(value, key)
 	list(value = value[o], label = label[o], estimate = estimate[o], low = low[o],
@@ -170,8 +128,7 @@ nlStoreFromRows <- function(value, label, estimate, low, high, trial, key) {
 }
 
 
-# run the trials in order. targets, labels, low, high and keys are one element
-# per trial, in presentation order; reference is the store the run starts from.
+#one element per trial in presentation order, reference is the starting store
 nlRunTrials <- function(targets, labels, low, high, keys, reference, memoryLength,
 						accuracyPercent, firstEstimate, lowerBound, upperBound, verbose = FALSE) {
 
@@ -203,7 +160,7 @@ nlRunTrials <- function(targets, labels, low, high, keys, reference, memoryLengt
 }
 
 
-# a trial-by-trial trace of the steps above, for debugging.
+#a trial-by-trial trace of the steps above, for debugging
 nlTraceTrial <- function(trialNumber, target, remembered, bracket, equivalence, placement, accuracyPercent, estimate) {
 	cat("**** trial", trialNumber, "target", target, "****\n")
 	print(data.frame(value = remembered$value, label = remembered$label,
@@ -218,7 +175,7 @@ nlTraceTrial <- function(trialNumber, target, remembered, bracket, equivalence, 
 }
 
 
-# the k-th occurrence of each value, counted in the order the values are given.
+#the k-th occurrence of each value, counted in the order the values are given
 nlPresentationIndex <- function(values) {
 	uniqueValues <- unique(values)
 	key <- match(values, uniqueValues)

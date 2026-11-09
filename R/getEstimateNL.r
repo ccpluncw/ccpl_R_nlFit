@@ -19,18 +19,18 @@
 #' @param data A dataframe with one row per trial and one row per reference point, holding the columns named by trialCol, targetCol, valueCol, lowCol, highCol and estimateCol. Trials are numbered 1 through totalNumTargets; a trial number of 0 marks a reference point, whose estimate is its position on the line. It is created in ordinalNumberLine() and passed to this function.
 #' @param totalNumTargets An integer specifying the number of trials (targets) in data. The function estimates trials 1 through totalNumTargets in order.
 #' @param upperBound A number that identifes the upper point beyond which the partcipant cannot respond.  This is the upperBound of the bounded number line or the upper screen edge when the unbounded number line is used. This must be specified in "number-line units."
-#' @param lowerBound A number that identifes the lower point beyond which the partcipant cannot respond.  This is the lowerBound of the bounded and unbounded number line or the lower screen edge when the universal number line is used.  DEFAULT = 0.
-#' @param trialCol A string specifying the column of data that holds the trialNumbers.  DEFAULT = "trial".
-#' @param targetCol A string specifying the column of data that holds the targetValues.  DEFAULT = "target".
-#' @param estimateCol A string specifying the column of data that holds the estimated values.  DEFAULT = "estimate".
-#' @param valueCol A string specifying the column of data that holds the target values.  DEFAULT = "targetValue".
-#' @param lowCol A string specifying the column of data that holds the lower value of the range of equivelent numbers derived from numberSensitivity.  DEFAULT = "low".
-#' @param highCol A string specifying the column of data that holds the higher value of the range of equivelent numbers derived from numberSensitivity.  DEFAULT = "high".
-#' @param memoryLength An integer that specifies the number of previous estimates that are remembered. On trial t the remembered set is the estimates from trials t-memoryLength through t-1, plus every reference point. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). DEFAULT = totalNumTargets.
-#' @param numberSensitivity A proportion between 0 and 1 that specifies the range of equivelance. The ranges are computed in ordinalNumberLine() and read from the lowCol and highCol columns of data, so this argument does not affect the estimates here.  DEFAULT = 1 (perfect precision)
-#' @param accuracyPercent A proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  DEFAULT = 0
-#' @param firstEstimate A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. 0 places the estimate at the bottom of the region between the two anchors, 1 at the top. Because a conceptual reference point is a reference point, whether firstEstimate applies on a given trial depends on which conceptual points were included on that run.  If NULL, the midpoint of the region is used.  DEFAULT = NULL
-#' @param verbose A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.
+#' @param lowerBound A number that identifes the lower point beyond which the partcipant cannot respond.  This is the lowerBound of the bounded and unbounded number line or the lower screen edge when the universal number line is used.  Default \code{0}.
+#' @param trialCol A string specifying the column of data that holds the trialNumbers.  Default \code{"trial"}.
+#' @param targetCol A string specifying the column of data that holds the targetValues.  Default \code{"target"}.
+#' @param estimateCol A string specifying the column of data that holds the estimated values.  Default \code{"estimate"}.
+#' @param valueCol A string specifying the column of data that holds the target values.  Default \code{"targetValue"}.
+#' @param lowCol A string specifying the column of data that holds the lower value of the range of equivelent numbers derived from numberSensitivity.  Default \code{"low"}.
+#' @param highCol A string specifying the column of data that holds the higher value of the range of equivelent numbers derived from numberSensitivity.  Default \code{"high"}.
+#' @param memoryLength An integer that specifies the number of previous estimates that are remembered. On trial t the remembered set is the estimates from trials t-memoryLength through t-1, plus every reference point. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). Default \code{totalNumTargets}.
+#' @param numberSensitivity A proportion between 0 and 1 that specifies the range of equivelance. The ranges are computed in ordinalNumberLine() and read from the lowCol and highCol columns of data, so this argument does not affect the estimates here.  Default \code{1} (perfect precision).
+#' @param accuracyPercent A proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  Default \code{0}.
+#' @param firstEstimate A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. 0 places the estimate at the bottom of the region between the two anchors, 1 at the top. Because a conceptual reference point is a reference point, whether firstEstimate applies on a given trial depends on which conceptual points were included on that run.  If NULL, the midpoint of the region is used.  Default \code{NULL}.
+#' @param verbose A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default \code{FALSE}.
 #''
 #' @return The dataframe that was passed in, with the estimate column filled in for the trial rows and with any relabelled bound carrying its new value.
 #' @keywords ordinalNumberline number line
@@ -49,8 +49,7 @@ getEstimateNL <- function(data, totalNumTargets, upperBound, lowerBound = 0, tri
 
 	if(is.null(memoryLength)) memoryLength <- totalNumTargets
 
-	#the row order of data breaks ties in value, so a row's position is carried
-	#through the simulation as its key
+	#row order breaks ties in value, so a row's position is its key
 	trialRow <- match(seq_len(totalNumTargets), data[[trialCol]])
 	referenceRow <- which(data[[trialCol]] == 0)
 

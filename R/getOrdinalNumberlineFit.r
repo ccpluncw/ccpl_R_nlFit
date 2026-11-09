@@ -3,22 +3,22 @@
 #' Function that fits fits the ordinalNumberLine and returns a fit statistic
 #' @param data This is a dataframe that must contain the following columns: target; estimate. It may hold one row per target, the usual case, or one row per trial with a presentation column, in which case the fit is trial level. A trial-level dataframe has more rows per participant than an averaged one at the same pars.n, so its BIC and AIC are on a different scale and are not comparable with those of an averaged fit. The dataset can also contain columns that effect code the influence of different parameters (to be implemented).
 #' @param upperBound A number that identifes the upper point beyond which the partcipant cannot respond. In the bounded task this is the upper end of the number line and is also passed as a visible reference point. In the universal task it is the upper screen edge.
-#' @param lowerBound A number that identifes the lower point beyond which the partcipant cannot respond. In the bounded task this is the lower end of the number line and is also passed as a visible reference point. In the universal task it is the lower screen edge. DEFAULT = 0.
-#' @param firstEstimate A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. 0 places the estimate at the bottom of the region between the two anchors, 1 at the top.  If NULL, the midpoint of the region is used.  DEFAULT = NULL
-#' @param memoryLength An integer that specifies the number of previous estimates that are remembered. On trial t the remembered set is the estimates from trials t-memoryLength through t-1, plus every reference point. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). DEFAULT = length(targets).
-#' @param accuracyPercent a proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  DEFAULT = 0
-#' @param numberSensitivity A number between -1 and 1 that specifies the range of equivelance. A number's range is scaled by its distance to the nearest reference point. When numberSensitivity=1, every number is discriminated from every other. When numberSensitivity=0, a number is not discriminated from anything within its distance to the nearest reference point. DEFAULT = 1 (perfect precision) At or below 0, sensitivity, accuracyPercent and pConceptual act as 0. Below 0, each visible reference point is used on a trial with probability \code{1 + numberSensitivity}, so at -1 none is.
-#' @param pConceptual A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is used on a trial. Each conceptual point is drawn independently on every trial. A conceptual point used on a trial anchors that trial but does not set its range of equivalence. It acts as 0 at or below a numberSensitivity of 0. DEFAULT = 0
+#' @param lowerBound A number that identifes the lower point beyond which the partcipant cannot respond. In the bounded task this is the lower end of the number line and is also passed as a visible reference point. In the universal task it is the lower screen edge. Default \code{0}.
+#' @param firstEstimate A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. 0 places the estimate at the bottom of the region between the two anchors, 1 at the top.  If NULL, the midpoint of the region is used.  Default \code{NULL}.
+#' @param memoryLength An integer that specifies the number of previous estimates that are remembered. On trial t the remembered set is the estimates from trials t-memoryLength through t-1, plus every reference point. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). Default \code{length(targets)}.
+#' @param accuracyPercent a proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  Default \code{0}.
+#' @param numberSensitivity A number between -1 and 1 that specifies the range of equivelance. A number's range is scaled by its distance to the nearest reference point. When numberSensitivity=1, every number is discriminated from every other. When numberSensitivity=0, a number is not discriminated from anything within its distance to the nearest reference point. Default \code{1} (perfect precision). At or below 0, sensitivity, accuracyPercent and pConceptual act as 0. Below 0, each visible reference point is used on a trial with probability \code{1 + numberSensitivity}, so at -1 none is.
+#' @param pConceptual A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is used on a trial. Each conceptual point is drawn independently on every trial. A conceptual point used on a trial anchors that trial but does not set its range of equivalence. It acts as 0 at or below a numberSensitivity of 0. Default \code{0}.
 #' @param visibleReferencePoints A vector of numbers that specify the visible (displayed) points that identify the value of positions on the number line. In the bounded task these are the upper and lower bound; in the universal task they are the labelled values and the bounds are the screen edges. This is required; there is no default.
-#' @param conceptualReferencePoints A vector of numbers that specify any conceptual points that the participant may use to identify the value of positions on the number line. These may be the middle of the bounded number-line, or a learned position on the number_line. Currently, conceptualReferencePoints are only modeled if they are used thoughout the task (not introduced part of the way through) Default is NULL.
-#' @param loops A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution.  Default is 1000.
-#' @param targetOrder A string specifying whether to keep the order in targets fixed ("fixed"), to ranndomize the order for every iteration of the loop ("random"), or to randomize it once and then use that order for all the loops ("single").  Default is "random".
-#' @param dataTargetCol A string that identifies the name of the column in data that contains the target values. The default is "target"
-#' @param dataEstimateCol A string that identifies the name of the column in data that contains the participant's estimate values. The default is "estimate"
-#' @param dataPresentationCol A string that identifies the name of the column in data that numbers the occurrences of a repeated target value, counted in the order they were presented. When data has that column the simulation is matched to the data trial by trial, on target and presentation. When it does not, the simulated estimates are averaged over the presentations of each value and matched on target alone, which is what an averaged dataset needs. The default is "presentation".
-#' @param minimizeStat A string that specifies which statistic to minimize when optimizing the model fit.  The options are: "BIC" , "AIC" , or "R_Square". Default is "BIC".
+#' @param conceptualReferencePoints A vector of numbers that specify any conceptual points that the participant may use to identify the value of positions on the number line. These may be the middle of the bounded number-line, or a learned position on the number_line. Currently, conceptualReferencePoints are only modeled if they are used thoughout the task (not introduced part of the way through) Default \code{NULL}.
+#' @param loops A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution.  Default \code{1000}.
+#' @param targetOrder A string specifying whether to keep the order in targets fixed ("fixed"), to ranndomize the order for every iteration of the loop ("random"), or to randomize it once and then use that order for all the loops ("single").  Default \code{"random"}.
+#' @param dataTargetCol A string that identifies the name of the column in data that contains the target values. Default \code{"target"}.
+#' @param dataEstimateCol A string that identifies the name of the column in data that contains the participant's estimate values. Default \code{"estimate"}.
+#' @param dataPresentationCol A string that identifies the name of the column in data that numbers the occurrences of a repeated target value, counted in the order they were presented. When data has that column the simulation is matched to the data trial by trial, on target and presentation. When it does not, the simulated estimates are averaged over the presentations of each value and matched on target alone, which is what an averaged dataset needs. Default \code{"presentation"}.
+#' @param minimizeStat A string that specifies which statistic to minimize when optimizing the model fit.  The options are: "BIC" , "AIC" , or "R_Square". Default \code{"BIC"}.
 #' @param pars.n The number of free parameters, that is, the number of parameters the search varies. This is required; there is no default.
-#' @param verbose A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.
+#' @param verbose A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default \code{FALSE}.
 #''
 #' @return The minimization statistic for the fit of the model to the data.  This is the value that will be miniized by the optimization program.
 #' @keywords ordinalNumberline ordinal number-line
@@ -33,8 +33,7 @@
 
 getOrdinalNumberlineFit <- function(data, upperBound, lowerBound = 0,firstEstimate = NULL, memoryLength = NULL, accuracyPercent = 0, numberSensitivity = 1, pConceptual = 0, visibleReferencePoints = NULL, conceptualReferencePoints = NULL, loops = 1000, targetOrder = "random", dataTargetCol = "target", dataEstimateCol = "estimate", minimizeStat = 'BIC', pars.n, verbose = FALSE, dataPresentationCol = "presentation") {
 
-  #these are structural inputs, not points in the search space, so a bad one stops the
-  #run rather than scoring Inf and leaving the search without a signal.
+  #structural inputs stop the run, scoring Inf would leave the search no signal
   if(missing(pars.n) || is.null(pars.n)) {
     stop("getOrdinalNumberlineFit: pars.n is required. Set it to the number of parameters the search varies.")
   }
@@ -54,15 +53,14 @@ getOrdinalNumberlineFit <- function(data, upperBound, lowerBound = 0,firstEstima
   #make sure that the input parameters from the grid search are valid
   validParams <- validateNumberlineParameters(parList)
 
-  #if the parameters from the grid search are valid, see how well they fit the data
+  #if the grid search parameters are valid, see how well they fit the data
   if(validParams == TRUE) {
 
 		parList <- fillNumberlineParList(parList)
 
 		df.fitted <- ordinalNumberLineSim(data[[dataTargetCol]], parList, loops=loops, verbose = verbose)
 
-		#trial-level data are matched presentation by presentation; averaged data have no
-		#presentation column, so the presentations of a repeated value are averaged too.
+		#match by presentation at trial level, else average over repeats
 		if(!is.null(dataPresentationCol) && dataPresentationCol %in% names(data)) {
 			df.dataFit <- merge(data, df.fitted, by.x = c(dataTargetCol, dataPresentationCol), by.y = c("target", "presentation"))
 			nlStopOnUnmatchedTrials(nrow(df.dataFit), nrow(data), dataPresentationCol)
@@ -77,7 +75,7 @@ getOrdinalNumberlineFit <- function(data, upperBound, lowerBound = 0,firstEstima
     out.BIC <- chutils::ch.IC(df.dataFit[[dataEstimateCol]], df.dataFit[["fEst"]], pars.n, ICtype = "BIC")
     out.AIC <- chutils::ch.IC(df.dataFit[[dataEstimateCol]], df.dataFit[["fEst"]], pars.n, ICtype = "AIC")
   } else {
-    #if the parameters are not valid, then assign the minimization variable Infinite value (Inf)
+    #if the parameters are not valid, assign the minimization variable Inf
     out.rss <- Inf
     out.BIC <- Inf
     out.AIC <- Inf

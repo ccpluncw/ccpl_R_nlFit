@@ -1,8 +1,4 @@
-## At perfect number sensitivity and no weight on accuracy the model places each
-## target between its two rank neighbours, so an ascending presentation order can
-## never produce a descending estimate. Monotonicity holds only in this corner:
-## below numberSensitivity = 1 the anchors can bracket in value while inverting in
-## estimate, and the fitted function is not monotone in general.
+#ascending targets give ascending estimates only at ns = 1 and no accuracy
 library(nlFit)
 
 targets <- seq(5, 95, by = 5)

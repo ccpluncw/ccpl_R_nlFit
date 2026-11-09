@@ -11,9 +11,9 @@ ordinalNumberLineSim(targets, parList, loops = 1000, verbose = FALSE)
 
 \item{parList}{A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. upperBound and visibleReferencePoints have no default and must be present. firstEstimate, memoryLength and conceptualReferencePoints may be absent or NULL, which is their default. lowerBound, numberSensitivity, accuracyPercent, pConceptual and targetOrder are filled with their defaults by fillNumberlineParList() when they are absent.}
 
-\item{loops}{A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution. Loops are collapsed to 1 when the run is deterministic, that is, when the target order is fixed or drawn once and there is no conceptual-point inclusion draw to average over.  Default = 1000.}
+\item{loops}{A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution. Loops are collapsed to 1 when the run is deterministic, that is, when the target order is fixed or drawn once and there is no conceptual-point inclusion draw to average over.  Default \code{1000}.}
 
-\item{verbose}{A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.
+\item{verbose}{A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default \code{FALSE}.
 '}
 }
 \value{

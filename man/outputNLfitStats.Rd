@@ -26,27 +26,27 @@ outputNLfitStats(
 
 \item{statList}{A list with the parameter names and values for the nlFit analysis. The list element name must be the parameter name and the value is the contents. The required elements are: firstEstimate; upperBound; lowerBound; memoryLength; targetOrder; numberSensitivity; accuracyPercent; pConceptual; visibleReferencePoints; conceptualReferencePoints.}
 
-\item{dataTargetCol}{A string that identifies the name of the column in data that contains the target values. The default is "target"}
+\item{dataTargetCol}{A string that identifies the name of the column in data that contains the target values. Default \code{"target"}.}
 
-\item{dataEstimateCol}{A string that identifies the name of the column in data that contains the participant's estimate values. The default is "estimate"}
+\item{dataEstimateCol}{A string that identifies the name of the column in data that contains the participant's estimate values. Default \code{"estimate"}.}
 
 \item{pars.n}{The number of free parameters, that is, the number of parameters the search varied. This is required; there is no default.}
 
-\item{loops}{A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution.  Default is 1000.}
+\item{loops}{A number specifying the number of loops that will be run in the  simulation when it calculates the estimates. Higher numbers produce more precise estimates, but also increase the time needed to converge on a solution.  Default \code{1000}.}
 
-\item{sinkFilename}{A string that identifies the name of file (.txt) in which the fit statistics will be saved. The default is NULL, whereby the statistics are not written anywhere. The same numbers are always returned in the runStats element of the result.}
+\item{sinkFilename}{A string that identifies the name of file (.txt) in which the fit statistics will be saved. Default \code{NULL}, whereby the statistics are not written anywhere. The same numbers are always returned in the runStats element of the result.}
 
-\item{appendSinkFile}{A boolean to specify whether the new data should be appended to the output file (TRUE) or write over the output file (FALSE). Default = TRUE}
+\item{appendSinkFile}{A boolean to specify whether the new data should be appended to the output file (TRUE) or write over the output file (FALSE). Default \code{TRUE}.}
 
-\item{plotFileName}{A string that identifies the name of file (.pdf) in which the data plot will be saved. The default is NULL, whereby no plot is drawn and no graphics device is opened. Plot the returned df.fitted to draw it yourself.}
+\item{plotFileName}{A string that identifies the name of file (.pdf) in which the data plot will be saved. Default \code{NULL}, whereby no plot is drawn and no graphics device is opened. Plot the returned df.fitted to draw it yourself.}
 
-\item{xlim}{A vector of two numbers giving the x axis limits of the plot. When NULL, the limits span the bounds and the targets in data. Default is NULL.}
+\item{xlim}{A vector of two numbers giving the x axis limits of the plot. When NULL, the limits span the bounds and the targets in data. Default \code{NULL}.}
 
-\item{ylim}{A vector of two numbers giving the y axis limits of the plot. When NULL, the limits span the bounds, the estimates in data, and the fitted estimates. Default is NULL.}
+\item{ylim}{A vector of two numbers giving the y axis limits of the plot. When NULL, the limits span the bounds, the estimates in data, and the fitted estimates. Default \code{NULL}.}
 
-\item{seed}{The random seed the caller set before running the fit. It is recorded in the output header so a run can be reproduced. The function does not set the seed itself. Default is NULL, whereby no seed is reported.}
+\item{seed}{The random seed the caller set before running the fit. It is recorded in the output header so a run can be reproduced. The function does not set the seed itself. Default \code{NULL}, whereby no seed is reported.}
 
-\item{dataPresentationCol}{A string that identifies the name of the column in data that numbers the occurrences of a repeated target value, counted in the order they were presented. When data has that column the simulation is matched to the data trial by trial, on target and presentation. When it does not, the simulated estimates are averaged over the presentations of each value and matched on target alone, which is what an averaged dataset needs. The default is "presentation".}
+\item{dataPresentationCol}{A string that identifies the name of the column in data that numbers the occurrences of a repeated target value, counted in the order they were presented. When data has that column the simulation is matched to the data trial by trial, on target and presentation. When it does not, the simulated estimates are averaged over the presentations of each value and matched on target alone, which is what an averaged dataset needs. Default \code{"presentation"}.}
 
 \item{free}{A character vector naming the parameters the search varied. When it names firstEstimate, the standard error of firstEstimate is computed and written beside it in the report. It allows for the trade-off with accuracyPercent when \code{free} also names that. See nlFit() for the method. Default \code{NULL}, whereby no standard error is computed.
 '}

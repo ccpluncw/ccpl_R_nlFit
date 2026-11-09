@@ -15,7 +15,7 @@ validateNumberlineParameters <- function(parList) {
 	if(is.null(parList[["upperBound"]])) {
 		out <- FALSE
 	} else {
-		#lowerBound defaults to 0 wherever it is an argument, so an absent one is 0 here too
+		#an absent lowerBound is 0, as it is wherever it is an argument
 		lowerBound <- if(is.null(parList[["lowerBound"]])) 0 else parList[["lowerBound"]]
 		if(parList[["upperBound"]] < lowerBound) out <- FALSE
 	}

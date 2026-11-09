@@ -144,7 +144,7 @@ if(requireNamespace("smartGridSearch2", quietly = TRUE)) {
 	trial <- run(free = c("firstEstimate", "accuracyPercent"))
 	stopifnot(is.finite(trial$parameters$se[1]), isTRUE(trial$columns$trialLevel))
 
-	#a fit saved without the se column still prints and converts
+	#a fit with no se column still prints and converts
 	old <- free
 	old$parameters$se <- NULL
 	invisible(capture.output(print(old)))

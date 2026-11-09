@@ -29,29 +29,29 @@ getEstimateNL(
 
 \item{upperBound}{A number that identifes the upper point beyond which the partcipant cannot respond.  This is the upperBound of the bounded number line or the upper screen edge when the unbounded number line is used. This must be specified in "number-line units."}
 
-\item{lowerBound}{A number that identifes the lower point beyond which the partcipant cannot respond.  This is the lowerBound of the bounded and unbounded number line or the lower screen edge when the universal number line is used.  DEFAULT = 0.}
+\item{lowerBound}{A number that identifes the lower point beyond which the partcipant cannot respond.  This is the lowerBound of the bounded and unbounded number line or the lower screen edge when the universal number line is used.  Default \code{0}.}
 
-\item{trialCol}{A string specifying the column of data that holds the trialNumbers.  DEFAULT = "trial".}
+\item{trialCol}{A string specifying the column of data that holds the trialNumbers.  Default \code{"trial"}.}
 
-\item{targetCol}{A string specifying the column of data that holds the targetValues.  DEFAULT = "target".}
+\item{targetCol}{A string specifying the column of data that holds the targetValues.  Default \code{"target"}.}
 
-\item{valueCol}{A string specifying the column of data that holds the target values.  DEFAULT = "targetValue".}
+\item{valueCol}{A string specifying the column of data that holds the target values.  Default \code{"targetValue"}.}
 
-\item{lowCol}{A string specifying the column of data that holds the lower value of the range of equivelent numbers derived from numberSensitivity.  DEFAULT = "low".}
+\item{lowCol}{A string specifying the column of data that holds the lower value of the range of equivelent numbers derived from numberSensitivity.  Default \code{"low"}.}
 
-\item{highCol}{A string specifying the column of data that holds the higher value of the range of equivelent numbers derived from numberSensitivity.  DEFAULT = "high".}
+\item{highCol}{A string specifying the column of data that holds the higher value of the range of equivelent numbers derived from numberSensitivity.  Default \code{"high"}.}
 
-\item{estimateCol}{A string specifying the column of data that holds the estimated values.  DEFAULT = "estimate".}
+\item{estimateCol}{A string specifying the column of data that holds the estimated values.  Default \code{"estimate"}.}
 
-\item{memoryLength}{An integer that specifies the number of previous estimates that are remembered. On trial t the remembered set is the estimates from trials t-memoryLength through t-1, plus every reference point. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). DEFAULT = totalNumTargets.}
+\item{memoryLength}{An integer that specifies the number of previous estimates that are remembered. On trial t the remembered set is the estimates from trials t-memoryLength through t-1, plus every reference point. The larger the number, the more accurate the estimates are going to be (given the constraints of the process). Default \code{totalNumTargets}.}
 
-\item{numberSensitivity}{A proportion between 0 and 1 that specifies the range of equivelance. The ranges are computed in ordinalNumberLine() and read from the lowCol and highCol columns of data, so this argument does not affect the estimates here.  DEFAULT = 1 (perfect precision)}
+\item{numberSensitivity}{A proportion between 0 and 1 that specifies the range of equivelance. The ranges are computed in ordinalNumberLine() and read from the lowCol and highCol columns of data, so this argument does not affect the estimates here.  Default \code{1} (perfect precision).}
 
-\item{accuracyPercent}{A proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  DEFAULT = 0}
+\item{accuracyPercent}{A proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding.  Default \code{0}.}
 
-\item{firstEstimate}{A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. 0 places the estimate at the bottom of the region between the two anchors, 1 at the top. Because a conceptual reference point is a reference point, whether firstEstimate applies on a given trial depends on which conceptual points were included on that run.  If NULL, the midpoint of the region is used.  DEFAULT = NULL}
+\item{firstEstimate}{A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. 0 places the estimate at the bottom of the region between the two anchors, 1 at the top. Because a conceptual reference point is a reference point, whether firstEstimate applies on a given trial depends on which conceptual points were included on that run.  If NULL, the midpoint of the region is used.  Default \code{NULL}.}
 
-\item{verbose}{A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default is FALSE.
+\item{verbose}{A boolean that specifies whether to print intermediate steps. This is used for debugging.  Default \code{FALSE}.
 '}
 }
 \value{

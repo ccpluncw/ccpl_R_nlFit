@@ -33,43 +33,43 @@ nlFit(
 
 \item{upperBound}{A number that identifes the upper point beyond which the partcipant cannot respond. In the bounded task this is the upper end of the number line and is also passed as a visible reference point. In the universal task it is the upper screen edge. This is required; there is no default.}
 
-\item{lowerBound}{A number that identifes the lower point beyond which the partcipant cannot respond. In the bounded task this is the lower end of the number line and is also passed as a visible reference point. In the universal task it is the lower screen edge. DEFAULT = 0.}
+\item{lowerBound}{A number that identifes the lower point beyond which the partcipant cannot respond. In the bounded task this is the lower end of the number line and is also passed as a visible reference point. In the universal task it is the lower screen edge. Default \code{0}.}
 
 \item{visibleReferencePoints}{A vector of numbers that specify the visible (displayed) points that identify the value of positions on the number line. In the bounded task these are the upper and lower bound; in the universal task they are the labelled values and the bounds are the screen edges. This is required; there is no default.}
 
-\item{conceptualReferencePoints}{A vector of numbers that specify any conceptual points that the participant may use to identify the value of positions on the number line. Default is NULL.}
+\item{conceptualReferencePoints}{A vector of numbers that specify any conceptual points that the participant may use to identify the value of positions on the number line. Default \code{NULL}.}
 
-\item{free}{The parameters the search varies. Either a character vector of parameter names, each searched over its whole domain at the default step, or a named list whose elements are \code{c(lower, upper)} or \code{c(lower, upper, step)}, each searched over the range given. Presence in \code{free} is what makes a parameter free; a parameter that is not named is held fixed at its own argument. A range may narrow a parameter's domain but may not widen it, and a range outside the domain is an error. The parameters that can be searched are firstEstimate, memoryLength, accuracyPercent, numberSensitivity and pConceptual. The domain and default range of numberSensitivity are -1 to 1, or 0 to 1 when every visible point is a bound, as on a bounded number line, because label use cannot be recovered from the estimates there. The default ranges are 0 to 1 in steps of 0.001 for the proportions, and 1 to the number of rows of data in steps of 1 for memoryLength, whose step cannot be changed. DEFAULT = c("firstEstimate", "accuracyPercent", "numberSensitivity").}
+\item{free}{The parameters the search varies. Either a character vector of parameter names, each searched over its whole domain at the default step, or a named list whose elements are \code{c(lower, upper)} or \code{c(lower, upper, step)}, each searched over the range given. Presence in \code{free} is what makes a parameter free; a parameter that is not named is held fixed at its own argument. A range may narrow a parameter's domain but may not widen it, and a range outside the domain is an error. The parameters that can be searched are firstEstimate, memoryLength, accuracyPercent, numberSensitivity and pConceptual. The domain and default range of numberSensitivity are -1 to 1, or 0 to 1 when every visible point is a bound, as on a bounded number line, because label use cannot be recovered from the estimates there. The default ranges are 0 to 1 in steps of 0.001 for the proportions, and 1 to the number of rows of data in steps of 1 for memoryLength, whose step cannot be changed. Default \code{c("firstEstimate", "accuracyPercent", "numberSensitivity")}.}
 
-\item{firstEstimate}{A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. If NULL, the midpoint of the region is used. Ignored, with a warning, when firstEstimate is named in \code{free}. DEFAULT = NULL}
+\item{firstEstimate}{A proportion between 0 and 1 that identifies the spatial bias applied whenever a target is not bracketed by a remembered estimate, that is, whenever both of its anchors are reference points. If NULL, the midpoint of the region is used. Ignored, with a warning, when firstEstimate is named in \code{free}. Default \code{NULL}.}
 
-\item{accuracyPercent}{A proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding. Ignored, with a warning, when accuracyPercent is named in \code{free}. DEFAULT = 0}
+\item{accuracyPercent}{A proportion between 0 and 1 that specifies the weight given to accurate responding: 0 = no weight, 1 = perfect responding. Ignored, with a warning, when accuracyPercent is named in \code{free}. Default \code{0}.}
 
-\item{numberSensitivity}{A number between -1 and 1 that specifies the range of equivelance. When numberSensitivity=1, every number is discriminated from every other. Ignored, with a warning, when numberSensitivity is named in \code{free}. At or below 0, sensitivity, accuracyPercent and pConceptual act as 0. Below 0, each visible reference point is used on a trial with probability \code{1 + numberSensitivity}, so at -1 none is. DEFAULT = 1}
+\item{numberSensitivity}{A number between -1 and 1 that specifies the range of equivelance. When numberSensitivity=1, every number is discriminated from every other. Ignored, with a warning, when numberSensitivity is named in \code{free}. At or below 0, sensitivity, accuracyPercent and pConceptual act as 0. Below 0, each visible reference point is used on a trial with probability \code{1 + numberSensitivity}, so at -1 none is. Default \code{1}.}
 
-\item{memoryLength}{An integer that specifies the number of previous estimates that are remembered. NULL is the number of rows of data, which is the package's default. Ignored, with a warning, when memoryLength is named in \code{free}. DEFAULT = NULL}
+\item{memoryLength}{An integer that specifies the number of previous estimates that are remembered. NULL is the number of rows of data, which is the package's default. Ignored, with a warning, when memoryLength is named in \code{free}. Default \code{NULL}.}
 
-\item{pConceptual}{A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is used on a trial. Ignored, with a warning, when pConceptual is named in \code{free}. DEFAULT = 0}
+\item{pConceptual}{A proportion between 0 and 1 that specifies the probability that a conceptualReferencePoint is used on a trial. Ignored, with a warning, when pConceptual is named in \code{free}. Default \code{0}.}
 
-\item{search}{A string naming the effort the search is run at: "full", the effort a reported fit is run at, or "quick", which is small enough for an example and gives coarse estimates. DEFAULT = "full".}
+\item{search}{A string naming the effort the search is run at: "full", the effort a reported fit is run at, or "quick", which is small enough for an example and gives coarse estimates. Default \code{"full"}.}
 
-\item{control}{A named list overriding single search settings. It may name \code{loops} (the simulation runs the objective averages over), \code{finalLoops} (the runs the fit report is recomputed at), and any argument of \code{smartGridSearch()} other than the ones this function builds. An unrecognised name is an error. DEFAULT = list()}
+\item{control}{A named list overriding single search settings. It may name \code{loops} (the simulation runs the objective averages over), \code{finalLoops} (the runs the fit report is recomputed at), and any argument of \code{smartGridSearch()} other than the ones this function builds. An unrecognised name is an error. Default \code{list()}.}
 
-\item{targetOrder}{A string specifying whether to keep the order in targets fixed ("fixed"), to randomize the order for every iteration of the loop ("random"), or to randomize it once and then use that order for all the loops ("single"). Default is "random".}
+\item{targetOrder}{A string specifying whether to keep the order in targets fixed ("fixed"), to randomize the order for every iteration of the loop ("random"), or to randomize it once and then use that order for all the loops ("single"). Default \code{"random"}.}
 
-\item{minimizeStat}{A string that specifies which statistic to minimize when optimizing the model fit. The options are: "BIC", "AIC", or "R_Square". Default is "BIC".}
+\item{minimizeStat}{A string that specifies which statistic to minimize when optimizing the model fit. The options are: "BIC", "AIC", or "R_Square". Default \code{"BIC"}.}
 
-\item{dataTargetCol}{A string that identifies the name of the column in data that contains the target values. The default is "target"}
+\item{dataTargetCol}{A string that identifies the name of the column in data that contains the target values. Default \code{"target"}.}
 
-\item{dataEstimateCol}{A string that identifies the name of the column in data that contains the participant's estimate values. The default is "estimate"}
+\item{dataEstimateCol}{A string that identifies the name of the column in data that contains the participant's estimate values. Default \code{"estimate"}.}
 
-\item{dataPresentationCol}{A string that identifies the name of the column in data that numbers the occurrences of a repeated target value, counted in the order they were presented. When data has that column the fit is matched to the simulation trial by trial. The default is "presentation".}
+\item{dataPresentationCol}{A string that identifies the name of the column in data that numbers the occurrences of a repeated target value, counted in the order they were presented. When data has that column the fit is matched to the simulation trial by trial. Default \code{"presentation"}.}
 
-\item{sinkFilename}{A string that identifies the name of file (.txt) in which the fit statistics will be saved. The default is NULL, whereby the statistics are not written anywhere.}
+\item{sinkFilename}{A string that identifies the name of file (.txt) in which the fit statistics will be saved. Default \code{NULL}, whereby the statistics are not written anywhere.}
 
-\item{plotFileName}{A string that identifies the name of file (.pdf) in which the data plot will be saved. The default is NULL, whereby no plot is drawn and no graphics device is opened. Use plot() on the result to draw it.}
+\item{plotFileName}{A string that identifies the name of file (.pdf) in which the data plot will be saved. Default \code{NULL}, whereby no plot is drawn and no graphics device is opened. Use plot() on the result to draw it.}
 
-\item{verbose}{A boolean that specifies whether to print intermediate steps. This is used for debugging. Default is FALSE.
+\item{verbose}{A boolean that specifies whether to print intermediate steps. This is used for debugging. Default \code{FALSE}.
 '}
 }
 \value{
