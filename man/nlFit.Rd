@@ -97,8 +97,9 @@ stops with the install line when it is not available.
 When firstEstimate is free the fit reports its standard error, computed from
 the information the fitted values carry about it. The slopes of the fitted
 estimates are central differences with a step of 0.01, one-sided within 0.01 of
-0 or 1, and use one random seed so the simulation noise cancels. The error
-variance is the mean squared residual. When accuracyPercent is free the
+0 or 1, and share one random seed, drawn from the current random stream for
+each fit, so the simulation noise cancels. The stream is then restored. The
+error variance is the mean squared residual. When accuracyPercent is free the
 standard error allows for the trade-off between the two. Every other parameter
 is treated as known at its fitted value. A large standard error means the data
 say little about firstEstimate, which is expected when accuracyPercent is high

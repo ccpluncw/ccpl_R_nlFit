@@ -177,8 +177,9 @@ nlFitStopOnBadFixed <- function(parList, nTargets) {
 #' When firstEstimate is free the fit reports its standard error, computed from
 #' the information the fitted values carry about it. The slopes of the fitted
 #' estimates are central differences with a step of 0.01, one-sided within 0.01 of
-#' 0 or 1, and use one random seed so the simulation noise cancels. The error
-#' variance is the mean squared residual. When accuracyPercent is free the
+#' 0 or 1, and share one random seed, drawn from the current random stream for
+#' each fit, so the simulation noise cancels. The stream is then restored. The
+#' error variance is the mean squared residual. When accuracyPercent is free the
 #' standard error allows for the trade-off between the two. Every other parameter
 #' is treated as known at its fitted value. A large standard error means the data
 #' say little about firstEstimate, which is expected when accuracyPercent is high
@@ -527,11 +528,13 @@ nlFirstEstimateSE <- function(statList, data, df.fitted, accuracyFree,
 		}
 	)
 
+	#a new seed each call, shared by all predictions so loop noise cancels
+	sharedSeed <- sample.int(.Machine$integer.max, 1)
+
 	fittedAt <- function(parameter, value) {
 		parList <- statList
 		parList[[parameter]] <- value
-		#one seed for all predictions so loop noise cancels in a slope
-		set.seed(1)
+		set.seed(sharedSeed)
 		simulated <- ordinalNumberLineSim(data[[dataTargetCol]], parList, loops = loops)
 		nlMatchFitted(simulated, data, dataTargetCol, dataPresentationCol)$fEst
 	}

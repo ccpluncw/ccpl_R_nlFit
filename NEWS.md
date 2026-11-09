@@ -7,7 +7,8 @@
   differences, and allows for the trade-off with `accuracyPercent` when that is
   free. It appears in `print()`, in the `se` column of `fit$parameters`, in the
   `firstEstimate.se` column of `as.data.frame()`, and in the `sinkFilename`
-  report. The estimates, the predictions and the random stream are unchanged.
+  report. Its seed is drawn from the current random stream for each fit, and the
+  stream is then restored, so the estimates and predictions are unchanged.
 
 # nlFit 0.3.0
 

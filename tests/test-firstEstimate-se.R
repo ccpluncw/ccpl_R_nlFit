@@ -44,9 +44,9 @@ stopifnot(nearly(se(pars, person, TRUE), expected))
 
 #the step size does not drive the answer when the loops are random
 noisy <- modifyList(pars, list(numberSensitivity = 0.6, targetOrder = "random"))
-base <- se(noisy, person, TRUE, loops = 200)
-stopifnot(abs(se(noisy, person, TRUE, loops = 200, h = 0.005) / base - 1) < 0.1,
-		  abs(se(noisy, person, TRUE, loops = 200, h = 0.02) / base - 1) < 0.1)
+seeded <- function(h) { set.seed(3); se(noisy, person, TRUE, loops = 200, h = h) }
+base <- seeded(0.01)
+stopifnot(abs(seeded(0.005) / base - 1) < 0.1, abs(seeded(0.02) / base - 1) < 0.1)
 
 #at ap 1 the data say nothing about firstEstimate
 stopifnot(identical(se(modifyList(pars, list(accuracyPercent = 1)), person, TRUE), Inf),
@@ -65,7 +65,7 @@ stopifnot(nearly(se(pars, exact, TRUE), 0))
 #the caller's random stream is untouched
 statList <- c(list(upperBound = 100, lowerBound = 0, visibleReferencePoints = c(0, 100),
 				   conceptualReferencePoints = NULL), noisy)
-fitted <- data.frame(estimate = person$estimate, fEst = person$estimate)
+fitted <- data.frame(estimate = person$estimate, fEst = person$estimate + 2)
 callSE <- function() nlFit:::nlFirstEstimateSE(statList, person, fitted, TRUE, "target",
 											   "estimate", "presentation", 2)
 set.seed(9)
@@ -73,6 +73,15 @@ nextDraw <- runif(1)
 set.seed(9)
 invisible(callSE())
 stopifnot(identical(runif(1), nextDraw))
+
+#the seed follows the stream: same stream same result, new stream new result
+set.seed(21)
+firstCall <- callSE()
+set.seed(21)
+repeated <- callSE()
+set.seed(22)
+stopifnot(identical(firstCall, repeated), callSE() != firstCall)
+
 if(exists(".Random.seed", envir = globalenv())) rm(".Random.seed", envir = globalenv())
 invisible(callSE())
 stopifnot(!exists(".Random.seed", envir = globalenv()))
@@ -111,9 +120,9 @@ if(requireNamespace("smartGridSearch2", quietly = TRUE)) {
 			  !any(grepl(" SE ", capture.output(print(held)))))
 
 	#accuracy fixed uses firstEstimate alone
-	alone <- run(free = "firstEstimate", accuracyPercent = 0.3)
+	alone <- run(free = "firstEstimate", accuracyPercent = 0.3, targetOrder = "fixed")
 	statAlone <- c(list(upperBound = 100, lowerBound = 0, visibleReferencePoints = c(0, 100),
-						conceptualReferencePoints = NULL, targetOrder = "random"),
+						conceptualReferencePoints = NULL, targetOrder = "fixed"),
 				   as.list(setNames(alone$parameters$value, alone$parameters$parameter)))
 	statAlone$firstEstimate <- alone$parameters$value[1]
 	stopifnot(nearly(alone$parameters$se[1],
